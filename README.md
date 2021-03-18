@@ -24,13 +24,13 @@ Shotgun_Metagenomic_Pipeline
 ```
 ## Important notes about the pipeline program
 
-# Submission of internal sbatch jobs
+### Submission of internal sbatch jobs
 The **SLURM_Shotgun_Metagenomic_Pipeline.sh** script will internally submit a job for each pair of sequence files for each step of the pipeline. Default partitions and time-limits for these jobs have been chosen based on previous experience, but there is always a chance that jobs might take longer if sequence files being processed are larger than what the program was tested with. This pipeline was created and tested using paired-end 150bp sequencing with a target of 40M total reads per sample (gzipped sequence file sizes ranged from 1.4-4.5G). If needing to modify the partitions and/or time-limits, one can simply pop open the script and modify where needed.
 
-# Job hang-ups
+### Job hang-ups
 While testing the pipeline it was noted that every now and then some jobs submitted by the **SLURM_Shotgun_Metagenomic_Pipeline.sh** script would fail, or get hung up. This seemed to be issues with the scheduling system itself and not so much the program. Regardless, it is good practice to keep an eye on running jobs to make sure one is not running obsurdly long. The pipeline program is designed to hold at a step until all jobs are completed, so if a job seems to be hung up, it will have to be killed for the pipeline to move foward.
 
-# Required programs/databases and parameter descriptions
+### Required programs/databases and parameter descriptions
 For descriptions of required programs/databases and parameters for **SLURM_Shotgun_Metagenomic_Pipeline.sh** or **Create_Cladogram.sh** scripts, run the respective script with parameter '-h'.
 
 ```
