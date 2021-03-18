@@ -1,10 +1,6 @@
 #!/bin/bash
 #Prep SILVA_132_SSURef_Nr99_tax_silva.fasta for use with shotgun metagenomic pipeline
 
-#Download file
-wget "https://www.arb-silva.de/fileadmin/silva_databases/release_132/Exports/SILVA_132_SSURef_Nr99_tax_silva.fasta.gz"
-gunzip SILVA_132_SSURef_Nr99_tax_silva.fasta.gz
-
 #Substitute Uracils for Thymines
 sed -i '/^>/!s/U/T/g' SILVA_132_SSURef_Nr99_tax_silva.fasta
 
