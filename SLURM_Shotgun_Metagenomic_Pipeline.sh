@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 16 March 2021                                #
+# Last updated: 18 March 2021                                #
 #                                                            #
 # Description: This is a wrapper program that wraps various  #
 # programs to process raw paired-end whole genome shotgun    #
@@ -107,14 +107,14 @@ set -e
 #           need be. Provide a comma separated list of steps #
 #           that you wish to skip in the pipeline. List may  #
 #           have the values: fastqc, bbduk, kneaddata,       #
-#           humann, graphlan.                                #
+#           humann.                                          #
 ##############################################################
 
 echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 16 March 2021                                #"
+echo "# Last updated: 18 March 2021                                #"
 echo "##############################################################"
 echo " "
 
@@ -223,7 +223,7 @@ while getopts ":hi:o:p:r:c:u:m:f:ae:t:l:s:" opt; do
     echo "           need be. Provide a comma separated list of steps "
     echo "           that you wish to skip in the pipeline. List may  "
     echo "           have the values: fastqc, bbduk, kneaddata,       "
-    echo "           humann, graphlan.                                "
+    echo "           humann.                                          "
     echo " "
     exit 0
     ;;
