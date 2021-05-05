@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 18 March 2021                                #
+# Last updated: 5 May 2021                                   #
 #                                                            #
 # Description: This is a wrapper program that wraps various  #
 # programs to process raw paired-end whole genome shotgun    #
@@ -114,7 +114,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 18 March 2021                                #"
+echo "# Last updated: 5 May 2021                                   #"
 echo "##############################################################"
 echo " "
 
@@ -485,7 +485,7 @@ else
   #Create shell script for running program
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_' '{print \$1,\$2,\$3}' OFS='_')" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
   echo "fastqc \$1 \$2 -o ${RESULTS_DIR}/1.FastQC_Initial_Reports \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/1.FastQC_Initial_Reports/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
@@ -493,7 +493,7 @@ else
   #For every sequence file submit job and grab job IDs
   touch job_ids.txt
   for file in ${SEQ_DIR}/*R1_001.${SEQ_EXT}; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_' '{print $1,$2,$3}' OFS='_')
+    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
     
     sbatch --partition=express \
     --job-name=${FILE_NAME} \
@@ -577,7 +577,7 @@ else
   #Create shell script for running program
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_' '{print \$1,\$2,\$3}' OFS='_')" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
   echo "FILE1=\$(echo \$1 | awk -F '/' '{print \$NF}')" >> bash_script.sh
   echo "FILE2=\$(echo \$2 | awk -F '/' '{print \$NF}')" >> bash_script.sh
   echo "bbduk.sh in=\$1 \\" >> bash_script.sh
@@ -592,7 +592,7 @@ else
   #For every pair of paired-end sequence files submit job and grab job IDs
   touch job_ids.txt
   for file in ${SEQ_DIR}/*R1_001.${SEQ_EXT}; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_' '{print $1,$2,$3}' OFS='_')
+    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
     
     sbatch --partition=express \
     --job-name=${FILE_NAME} \
@@ -656,7 +656,7 @@ else
   #Create shell script for running program
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_' '{print \$1,\$2,\$3}' OFS='_')" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
   echo "kneaddata --input \$1 \\" >> bash_script.sh
   echo "--input \$2 \\" >> bash_script.sh
   echo "--output ${RESULTS_DIR}/3.Decontaminated_Sequences \\" >> bash_script.sh
@@ -672,7 +672,7 @@ else
   #For every quality controlled pair of sequence files submit job and grab job IDs
   touch job_ids.txt
   for file in ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R1_001.${SEQ_EXT}; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_' '{print $1,$2,$3}' OFS='_')
+    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
     
     sbatch --partition=express \
     --job-name=${FILE_NAME} \
@@ -718,7 +718,7 @@ else
   #For every fastq file submit job and grab job IDs
   touch job_ids.txt
   for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_' '{print $1,$2,$3}' OFS='_')
+    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '.fastq' '{print $1}' OFS='_')
     
     sbatch --partition=express \
     --job-name=${FILE_NAME} \
@@ -788,7 +788,7 @@ else
   #Create shell script for running program
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_' '{print \$1,\$2,\$3}' OFS='_')" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_paired_1' '{print \$1}')" >> bash_script.sh
   echo "zcat \$1 \$2 > ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
   echo "humann --input ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq \\" >> bash_script.sh
   echo "--output ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling \\" >> bash_script.sh
@@ -806,7 +806,7 @@ else
   #For every pair of decontaminated sequence files submit job and grab job IDs
   touch job_ids.txt
   for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_1.fastq.gz; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_' '{print $1,$2,$3}' OFS='_')
+    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_paired_1' '{print $1}')
     
     sbatch --partition=medium \
     --job-name=${FILE_NAME} \
@@ -843,7 +843,7 @@ else
   #Create shell script for running program
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_' '{print \$1,\$2,\$3}' OFS='_')" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_humann_temp' '{print \$1}')" >> bash_script.sh
   echo "metaphlan --input_type bowtie2out \\" >> bash_script.sh
   echo "--add_viruses \\" >> bash_script.sh
   echo "-t marker_ab_table \\" >> bash_script.sh
@@ -864,7 +864,7 @@ else
   #For every metaphlan output submit job and grab job IDs
   touch job_ids.txt
   for dir in ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*humann_temp; do
-    FILE_NAME=$(echo $dir | awk -F '/' '{print $NF}' | awk -F '_' '{print $1,$2,$3}' OFS='_')
+    FILE_NAME=$(echo $dir | awk -F '/' '{print $NF}' | awk -F '_humann_temp' '{print $1}')
     
     sbatch --partition=express \
     --job-name=${FILE_NAME} \
@@ -899,7 +899,7 @@ else
   echo "Cleaning things up... merging per sample tables and removing unneeded files"
   echo " "
   for dir in ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*humann_temp; do
-    FILE_NAME=$(echo $dir | awk -F '/' '{print $NF}' | awk -F '_' '{print $1,$2,$3}' OFS='_')
+    FILE_NAME=$(echo $dir | awk -F '/' '{print $NF}' | awk -F '_humann_temp' '{print $1}')
     
     mkdir ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${FILE_NAME}_Profiles
     
@@ -1080,7 +1080,7 @@ else
   #Create shell script for running program
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_' '{print \$1,\$2,\$3}' OFS='_')" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_paired_1' '{print \$1}')" >> bash_script.sh
   echo "if [[ -d ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/16S_Based_Taxa_Profiling/\${FILE_NAME}_16S ]]; then" >> bash_script.sh
   echo "  rm -r ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/16S_Based_Taxa_Profiling/\${FILE_NAME}_16S" >> bash_script.sh
   echo "  mkdir ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/16S_Based_Taxa_Profiling/\${FILE_NAME}_16S" >> bash_script.sh
@@ -1100,7 +1100,7 @@ else
   #For every pair of decontaminasted sequence files submit job and grab job IDs
   touch job_ids.txt
   for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_1.fastq.gz; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_' '{print $1,$2,$3}' OFS='_')
+    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_paired_1' '{print $1}')
     
     sbatch --partition=short \
     --job-name=${FILE_NAME} \
@@ -1344,7 +1344,7 @@ else
   #Submit jobs for each directory of extracted sequences
   touch job_ids.txt
   for dir in ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/16S_Based_Taxa_Profiling/*_16S; do
-    FILE_NAME=$(echo $dir | awk -F '/' '{print $NF}' | awk -F '_' '{print $1,$2,$3}' OFS='_')
+    FILE_NAME=$(echo $dir | awk -F '/' '{print $NF}' | awk -F '_16S' '{print $1}')
     
     sbatch --partition=express \
     --job-name=${FILE_NAME} \
@@ -1387,7 +1387,7 @@ else
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
   echo "for dir in ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/16S_Based_Taxa_Profiling/*_16S; do" >> bash_script.sh
-  echo "  ID=\$(echo \$dir | awk -F '/' '{print \$NF}' | awk -F '_' '{print \$1}' OFS='_')" >> bash_script.sh
+  echo "  ID=\$(echo \$dir | awk -F '/' '{print \$NF}' | awk -F '_16S' '{print \$1}')" >> bash_script.sh
   #echo "  cat \\" >> bash_script.sh
   #echo "  <(awk '\$4 == \"Species\"{print \$2, \$5}' \${dir}/out/aligned_classified_counts.txt | \\" >> bash_script.sh
   #echo "  sed 's/Root;rootrank;//' | sed 's/;Kingdom;/;/' | sed 's/;Phylum;/;/' | sed 's/;Class;/;/' | \\" >> bash_script.sh
