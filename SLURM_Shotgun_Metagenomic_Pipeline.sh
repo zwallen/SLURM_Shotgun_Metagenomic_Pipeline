@@ -486,7 +486,7 @@ else
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
   echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
-  echo "fastqc \$1 \$2 -o ${RESULTS_DIR}/1.FastQC_Initial_Reports \\" >> bash_script.sh
+  echo "fastqc \$1 \$2 -d ${RESULTS_DIR}/1.FastQC_Initial_Reports -o ${RESULTS_DIR}/1.FastQC_Initial_Reports \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/1.FastQC_Initial_Reports/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
