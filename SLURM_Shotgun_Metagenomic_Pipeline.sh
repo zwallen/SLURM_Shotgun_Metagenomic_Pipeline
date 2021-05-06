@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 5 May 2021                                   #
+# Last updated: 6 May 2021                                   #
 #                                                            #
 # Description: This is a wrapper program that wraps various  #
 # programs to process raw paired-end whole genome shotgun    #
@@ -114,7 +114,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 5 May 2021                                   #"
+echo "# Last updated: 6 May 2021                                   #"
 echo "##############################################################"
 echo " "
 
@@ -495,11 +495,11 @@ else
   for file in ${SEQ_DIR}/*R1_001.${SEQ_EXT}; do
     FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
     
-    sbatch --partition=express \
+    sbatch --partition=short \
     --job-name=${FILE_NAME} \
     --error=${RESULTS_DIR}/1.FastQC_Initial_Reports/0.ErrorOut/${FILE_NAME}.err \
     --output=${RESULTS_DIR}/1.FastQC_Initial_Reports/0.Output/${FILE_NAME}.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
     --mem-per-cpu=64000 \
@@ -594,11 +594,11 @@ else
   for file in ${SEQ_DIR}/*R1_001.${SEQ_EXT}; do
     FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
     
-    sbatch --partition=express \
+    sbatch --partition=short \
     --job-name=${FILE_NAME} \
     --error=${RESULTS_DIR}/2.Quality_Controlled_Sequences/0.ErrorOut/${FILE_NAME}.err \
     --output=${RESULTS_DIR}/2.Quality_Controlled_Sequences/0.Output/${FILE_NAME}.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
     --mem-per-cpu=64000 \
@@ -674,11 +674,11 @@ else
   for file in ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R1_001.${SEQ_EXT}; do
     FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
     
-    sbatch --partition=express \
+    sbatch --partition=short \
     --job-name=${FILE_NAME} \
     --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/${FILE_NAME}.err \
     --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/${FILE_NAME}.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=5 \
     --mem-per-cpu=32000 \
@@ -720,11 +720,11 @@ else
   for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq; do
     FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '.fastq' '{print $1}' OFS='_')
     
-    sbatch --partition=express \
+    sbatch --partition=short \
     --job-name=${FILE_NAME} \
     --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/${FILE_NAME}_gzip.err \
     --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/${FILE_NAME}_gzip.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
     --mem-per-cpu=64000 \
@@ -812,7 +812,7 @@ else
     --job-name=${FILE_NAME} \
     --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/${FILE_NAME}_humann.err \
     --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/${FILE_NAME}_humann.out \
-    --time=24:00:00 \
+    --time=50:00:00 \
     --ntasks=1 \
     --cpus-per-task=5 \
     --mem-per-cpu=32000 \
@@ -866,11 +866,11 @@ else
   for dir in ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*humann_temp; do
     FILE_NAME=$(echo $dir | awk -F '/' '{print $NF}' | awk -F '_humann_temp' '{print $1}')
     
-    sbatch --partition=express \
+    sbatch --partition=short \
     --job-name=${FILE_NAME} \
     --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/${FILE_NAME}_metaphlan.err \
     --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/${FILE_NAME}_metaphlan.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
     --mem-per-cpu=64000 \
@@ -938,11 +938,11 @@ else
   echo "sed -i '2s/_metaphlan_rel_abun_table//g' ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/metaphlan_rel_abun_table.tsv" >> bash_script_1.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*metaphlan_rel_abun_table.tsv" >> bash_script_1.sh
   
-  sbatch --partition=express \
+  sbatch --partition=short \
     --job-name=metaphlan_rel_abun_merge \
     --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/metaphlan_rel_abun_merge.err \
     --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/metaphlan_rel_abun_merge.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
     --mem-per-cpu=64000 \
@@ -957,11 +957,11 @@ else
   echo "sed -i '2s/_metaphlan_norm_abun_table//g' ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/metaphlan_norm_abun_table.tsv" >> bash_script_2.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*metaphlan_norm_abun_table.tsv" >> bash_script_2.sh
   
-  sbatch --partition=express \
+  sbatch --partition=short \
     --job-name=metaphlan_norm_abun_merge \
     --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/metaphlan_norm_abun_merge.err \
     --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/metaphlan_norm_abun_merge.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
     --mem-per-cpu=64000 \
@@ -976,11 +976,11 @@ else
   echo "--file_name genefamilies.tsv" >> bash_script_3.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*genefamilies.tsv" >> bash_script_3.sh
   
-  sbatch --partition=express \
+  sbatch --partition=short \
     --job-name=genefamilies_merge \
     --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/genefamilies_merge.err \
     --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/genefamilies_merge.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
     --mem-per-cpu=64000 \
@@ -995,11 +995,11 @@ else
   echo "--file_name pathabundance.tsv" >> bash_script_4.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*pathabundance.tsv" >> bash_script_4.sh
   
-  sbatch --partition=express \
+  sbatch --partition=short \
     --job-name=pathabundance_merge \
     --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/pathabundance_merge.err \
     --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/pathabundance_merge.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
     --mem-per-cpu=64000 \
@@ -1014,11 +1014,11 @@ else
   echo "--file_name pathcoverage.tsv" >> bash_script_5.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*pathcoverage.tsv" >> bash_script_5.sh
   
-  sbatch --partition=express \
+  sbatch --partition=short \
     --job-name=pathcoverage_merge \
     --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/pathcoverage_merge.err \
     --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/pathcoverage_merge.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
     --mem-per-cpu=64000 \
@@ -1097,7 +1097,7 @@ else
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/16S_Based_Taxa_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every pair of decontaminasted sequence files submit job and grab job IDs
+  #For every pair of decontaminated sequence files submit job and grab job IDs
   touch job_ids.txt
   for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_1.fastq.gz; do
     FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_paired_1' '{print $1}')
@@ -1346,11 +1346,11 @@ else
   for dir in ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/16S_Based_Taxa_Profiling/*_16S; do
     FILE_NAME=$(echo $dir | awk -F '/' '{print $NF}' | awk -F '_16S' '{print $1}')
     
-    sbatch --partition=express \
+    sbatch --partition=short \
     --job-name=${FILE_NAME} \
     --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/${FILE_NAME}_classify.err \
     --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/${FILE_NAME}_classify.out \
-    --time=2:00:00 \
+    --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
     --mem-per-cpu=64000 \
