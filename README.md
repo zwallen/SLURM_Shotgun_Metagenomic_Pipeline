@@ -1,4 +1,4 @@
-This github repository houses a wrapper program (**SLURM_Shotgun_Metagenomic_Pipeline.sh**) for processing metagenomic sequences (derived from Illumina paired-end whole genome shotgun sequencing) to taxonomic (relative abundances and normalized abundance counts) and functional (gene and pathway) profiles on a high performance computing cluster using a SLURM scheduling system. The overall pipeline includes performing an intitial quality assessment on raw sequences using FastQC [https://www.bioinformatics.babraham.ac.uk/projects/fastqc/], adapter removal and quality trimming/filtering using BBDuk [https://sourceforge.net/projects/bbmap/], removal of host contaminant reads using Bowtie2 as implemented in Kneaddata [https://huttenhower.sph.harvard.edu/kneaddata/], and lastly taxonomic and functional profiling using MetaPhlAn/HUMAnN workflow [https://huttenhower.sph.harvard.edu/humann/]. Additionally, 16S-based taxonomic profiling can also be requested using SortMeRNA [https://github.com/biocore/sortmerna] to extract 16S rRNA DNA sequences and Ribosomal Database Project Naive Bayesian Classifier [https://sourceforge.net/projects/rdp-classifier/] to classify extracted 16S sequences. A convenience script is also located in the repository that wraps GraPhlAn [https://huttenhower.sph.harvard.edu/graphlan/] for generating a cladogram of top most abundant clades detected by MetaPhlAn (**Create_Cladogram.sh**).
+This github repository houses a wrapper program (**SLURM_Shotgun_Metagenomic_Pipeline.sh**) for processing metagenomic sequences (derived from Illumina paired-end whole genome shotgun sequencing) to taxonomic (relative abundances and normalized abundance counts) and functional (gene and pathway) profiles on a high performance computing cluster using a SLURM scheduling system. The overall pipeline includes performing an intitial quality assessment on raw sequences using FastQC [https://www.bioinformatics.babraham.ac.uk/projects/fastqc/], adapter removal and quality trimming/filtering using BBDuk [https://sourceforge.net/projects/bbmap/], removal of host contaminant reads using Bowtie2 as implemented in Kneaddata [https://huttenhower.sph.harvard.edu/kneaddata/], and lastly taxonomic and functional profiling using MetaPhlAn/HUMAnN workflow [https://huttenhower.sph.harvard.edu/humann/]. A convenience script is also located in the repository that wraps GraPhlAn [https://huttenhower.sph.harvard.edu/graphlan/] for generating a cladogram of top most abundant clades detected by MetaPhlAn (**Create_Cladogram.sh**).
 
 The following gives an overview of the overall structure of the repository:
 
@@ -6,10 +6,9 @@ The following gives an overview of the overall structure of the repository:
 ```
 Shotgun_Metagenomic_Pipeline
 |
-|-- Reference_Files -- Directory that contains two shell scripts: 0.get_reference_files.sh and 0.prep_SILVA_132_SSURef_Nr99_tax_silva.sh.
+|-- Reference_Files -- Directory that contains the shell script 0.get_reference_files.sh.
 |                      Running 0.get_reference_files.sh will download all the necessary and most up to date reference files and databases
-|                      used in the pipeline. 0.prep_SILVA_132_SSURef_Nr99_tax_silva.sh can be ran on the SILVA_132_SSURef_Nr99_tax_silva
-|                      reference FASTA to prep for use with the pipeline script.
+|                      used in the pipeline.
 |
 |-- Support_Files -- Directory that contains the shell script 0.get_support_files.sh that downloads any supporting files/programs needed.
 |
@@ -39,7 +38,7 @@ For descriptions of required programs/databases and parameters for **SLURM_Shotg
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 18 March 2021                                #
+# Last updated: 24 May 2021                                  #
 ##############################################################
  
  Description: This is a wrapper program that wraps various  
@@ -70,21 +69,7 @@ For descriptions of required programs/databases and parameters for **SLURM_Shotg
     Markers:    File with ChocoPhlAn GeneIDs and marker     
                 taxonomies. Used for replacing GeneIDs with 
                 clade marker taxonomy lineages in the       
-                normalized abundance tables from MetaPhlAn. 
-                                                            
- Optional programs and databases:                           
-    SortMeRNA:  For extracting 16S rRNA gene sequences from 
-                wgs reads. Only needed if running the       
-                additional 16S based classification         
-                pipeline. Requires a 16S FASTA reference    
-                file to use for extracting 16S sequences.   
-    RDP classifier:                                         
-                For classifying extracted 16S rRNA gene     
-                sequences. Only needed if running the       
-                additional 16S based classification         
-                pipeline. Requires a 16S FASTA reference    
-                to use for training the classifier and      
-                classifying sequences.                      
+                normalized abundance tables from MetaPhlAn.                    
                                                             
  Usage:                                                     
  SLURM_Shotgun_Metagenomic_Pipeline.sh -i input_seqs_dir \  
@@ -119,26 +104,7 @@ For descriptions of required programs/databases and parameters for **SLURM_Shotg
      -m    (Required) Path to clade marker info file        
            mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2    
      -f    (Required) E-mail to send notifications to upon  
-           failure of any jobs.                             
-     -a    (Optional) Perform additional 16S rRNA gene      
-           based taxonomy profiling.                        
-     -e    (Optional) 16S rRNA DNA reference FASTA file to  
-           use for extraction of 16S rRNA DNA sequences.    
-           Should be unzipped FASTA file with extension     
-           fasta, fa, or fna.                               
-     -t    (Optional) 16S rRNA DNA reference FASTA file to  
-           use for training the RDP classifier and          
-           classifying extracted 16S sequences. Should be   
-           unzipped FASTA file with extension fasta, fa, or 
-           fna. Should be of the following format:          
-                                                            
-     >Seq_ID Kingdom;Phylum;Class;Order;Family;Genus;Species
-     ACTGAAACTGCCGTTCAAAGCTTCGCGCGCTTTCCCGGGCGCGATATACGCGCGC
-     AAACTGGGGTCGCGAA                                       
-                                                            
-     -l    (Optional) Location of RDP classifier source dir 
-           (rdp_classifier_x.xx). Safest to give full path  
-           to the dir, but a partial path should also work. 
+           failure of any jobs.
      -s    (Optional) Skip certain steps in the pipeline if 
            need be. Provide a comma separated list of steps 
            that you wish to skip in the pipeline. List may  
