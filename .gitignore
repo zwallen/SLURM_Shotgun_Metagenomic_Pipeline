@@ -1,5 +1,2 @@
 /Reference_Files/*
 !/Reference_Files/0.get_reference_files.sh
-!/Reference_Files/0.prep_SILVA_132_SSURef_Nr99_tax_silva.sh
-/Support_Files/*
-!/Support_Files/0.get_support_files.sh
