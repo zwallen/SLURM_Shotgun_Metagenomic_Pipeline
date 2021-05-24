@@ -10,8 +10,6 @@ Shotgun_Metagenomic_Pipeline
 |                      Running 0.get_reference_files.sh will download all the necessary and most up to date reference files and databases
 |                      used in the pipeline.
 |
-|-- Support_Files -- Directory that contains the shell script 0.get_support_files.sh that downloads any supporting files/programs needed.
-|
 |-- Create_Cladogram.sh -- Convenience script for creating a cladogram with GraPhlAn. Takes the MetaPhlAn relative abundance table generated
 |                          during running of HUMAnN as input.
 |
