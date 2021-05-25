@@ -17,6 +17,7 @@ set -e
 #                high performance computing cluster          #
 #                scheduling system.                          #
 #    FastQC:     For performing initial quality reports.     #
+#    BBMerge:    For merging paired-end reads.               #
 #    BBDuk:      For adapter and quality trimming of raw wgs #
 #                reads. Also can remove PhiX sequences.      #
 #    KneadData:  For removing host contamination from wgs    #
@@ -73,8 +74,8 @@ set -e
 #     -s    (Optional) Skip certain steps in the pipeline if #
 #           need be. Provide a comma separated list of steps #
 #           that you wish to skip in the pipeline. List may  #
-#           have the values: fastqc, bbduk, kneaddata,       #
-#           humann.                                          #
+#           have the values: fastqc, bbmerge, bbduk,         #
+#           kneaddata, humann.                               #
 ##############################################################
 
 echo " "
@@ -100,6 +101,7 @@ while getopts ":hi:o:p:r:c:u:m:f:s:" opt; do
     echo "                high performance computing cluster          "
     echo "                scheduling system.                          "
     echo "    FastQC:     For performing initial quality reports.     "
+    echo "    BBMerge:    For merging paired-end reads.               "
     echo "    BBDuk:      For adapter and quality trimming of raw wgs "
     echo "                reads. Also can remove PhiX sequences.      "
     echo "    KneadData:  For removing host contamination from wgs    "
@@ -156,8 +158,8 @@ while getopts ":hi:o:p:r:c:u:m:f:s:" opt; do
     echo "     -s    (Optional) Skip certain steps in the pipeline if "
     echo "           need be. Provide a comma separated list of steps "
     echo "           that you wish to skip in the pipeline. List may  "
-    echo "           have the values: fastqc, bbduk, kneaddata,       "
-    echo "           humann.                                          "
+    echo "           have the values: fastqc, bbmerge, bbduk,         "
+    echo "           kneaddata, humann.                               "
     echo " "
     exit 0
     ;;
@@ -347,6 +349,16 @@ if echo $SKIP | grep -q "fastqc"; then
   echo " "
   echo "*** Skipping running of initial FastQC report generation on input fastq files ***"
   echo " "
+  
+  #Create directory
+  if [ -d "${RESULTS_DIR}/0.FastQC_Initial_Reports" ]
+  then
+	  :
+  else
+	  mkdir ${RESULTS_DIR}/0.FastQC_Initial_Reports
+	  mkdir ${RESULTS_DIR}/0.FastQC_Initial_Reports/0.ErrorOut
+	  mkdir ${RESULTS_DIR}/0.FastQC_Initial_Reports/0.Output
+  fi
 else
   SECONDS=0
   echo " "
@@ -354,13 +366,13 @@ else
   echo " "
   
   #Create directory for output
-  if [ -d "${RESULTS_DIR}/1.FastQC_Initial_Reports" ]
+  if [ -d "${RESULTS_DIR}/0.FastQC_Initial_Reports" ]
   then
 	  :
   else
-	  mkdir ${RESULTS_DIR}/1.FastQC_Initial_Reports
-	  mkdir ${RESULTS_DIR}/1.FastQC_Initial_Reports/0.ErrorOut
-	  mkdir ${RESULTS_DIR}/1.FastQC_Initial_Reports/0.Output
+	  mkdir ${RESULTS_DIR}/0.FastQC_Initial_Reports
+	  mkdir ${RESULTS_DIR}/0.FastQC_Initial_Reports/0.ErrorOut
+	  mkdir ${RESULTS_DIR}/0.FastQC_Initial_Reports/0.Output
   fi
   
   ##### Run FastQC #####
@@ -368,8 +380,8 @@ else
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
   echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
-  echo "fastqc \$1 \$2 -d ${RESULTS_DIR}/1.FastQC_Initial_Reports -o ${RESULTS_DIR}/1.FastQC_Initial_Reports \\" >> bash_script.sh
-  echo "> ${RESULTS_DIR}/1.FastQC_Initial_Reports/\${FILE_NAME}.log 2>&1" >> bash_script.sh
+  echo "fastqc \$1 \$2 -d ${RESULTS_DIR}/0.FastQC_Initial_Reports -o ${RESULTS_DIR}/0.FastQC_Initial_Reports \\" >> bash_script.sh
+  echo "> ${RESULTS_DIR}/0.FastQC_Initial_Reports/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
   #For every sequence file submit job and grab job IDs
@@ -379,8 +391,8 @@ else
     
     sbatch --partition=short \
     --job-name=${FILE_NAME} \
-    --error=${RESULTS_DIR}/1.FastQC_Initial_Reports/0.ErrorOut/${FILE_NAME}.err \
-    --output=${RESULTS_DIR}/1.FastQC_Initial_Reports/0.Output/${FILE_NAME}.out \
+    --error=${RESULTS_DIR}/0.FastQC_Initial_Reports/0.ErrorOut/${FILE_NAME}.err \
+    --output=${RESULTS_DIR}/0.FastQC_Initial_Reports/0.Output/${FILE_NAME}.out \
     --time=12:00:00 \
     --ntasks=1 \
     --cpus-per-task=1 \
@@ -414,8 +426,8 @@ else
   ##### Get mean Q score per file #####
   echo "Grabbing average quality score per sequence file..."
   echo " "
-  echo 'Filename Mean SD' > ${RESULTS_DIR}/1.FastQC_Initial_Reports/mean_Q_per_file.txt
-  for file in ${RESULTS_DIR}/1.FastQC_Initial_Reports/*fastqc.zip
+  echo 'Filename Mean SD' > ${RESULTS_DIR}/0.FastQC_Initial_Reports/mean_Q_per_file.txt
+  for file in ${RESULTS_DIR}/0.FastQC_Initial_Reports/*fastqc.zip
   do
     DIR_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '.zip' '{print $1}')
     unzip -qq $file
@@ -423,7 +435,7 @@ else
     sed '1,2d' | sed '$d' > q_vals.txt
     echo "q_vals <- read.table('q_vals.txt')" > Rfunc.R
     echo "cat(paste(round(mean(rep(q_vals[,1],q_vals[,2])),2), round(sd(rep(q_vals[,1],q_vals[,2])),2)), '\n')" >> Rfunc.R
-    echo $(echo $file | awk -F '/' '{print $NF}' | awk -F '_fastqc.zip' '{print $1}') $(Rscript --vanilla Rfunc.R) >> ${RESULTS_DIR}/1.FastQC_Initial_Reports/mean_Q_per_file.txt
+    echo $(echo $file | awk -F '/' '{print $NF}' | awk -F '_fastqc.zip' '{print $1}') $(Rscript --vanilla Rfunc.R) >> ${RESULTS_DIR}/0.FastQC_Initial_Reports/mean_Q_per_file.txt
     rm -r ${DIR_NAME}
     rm Rfunc.R
     rm q_vals.txt
@@ -434,11 +446,108 @@ else
 fi
 #################################################
 
+######### MERGE PAIRED READS WITH BBMERGE #######
+if echo $SKIP | grep -q "bbmerge"; then
+  echo " "
+  echo "*** Skipping running of BBMerge for paired read merging ***"
+  echo " "
+  
+  #Create directory
+  if [ -d "${RESULTS_DIR}/1.Merged_Paired_End_Sequences" ]
+  then
+	  :
+  else
+	  mkdir ${RESULTS_DIR}/1.Merged_Paired_End_Sequences
+	  mkdir ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.ErrorOut
+	  mkdir ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.Output
+  fi
+else
+  SECONDS=0
+  echo " "
+  echo "*** Running BBMerge to perform paired read merging ***"
+  echo " "
+  
+  #Create directory for output
+  if [ -d "${RESULTS_DIR}/1.Merged_Paired_End_Sequences" ]
+  then
+	  :
+  else
+	  mkdir ${RESULTS_DIR}/1.Merged_Paired_End_Sequences
+	  mkdir ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.ErrorOut
+	  mkdir ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.Output
+  fi
+  
+  ##### Run BBMerge #####
+  #Create shell script for running program
+  echo '#!/bin/bash' > bash_script.sh
+  echo "$PROG_LOAD" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
+  echo "FILE1=\$(echo \$1 | awk -F '/' '{print \$NF}')" >> bash_script.sh
+  echo "FILE2=\$(echo \$2 | awk -F '/' '{print \$NF}')" >> bash_script.sh
+  echo "bbmerge.sh in1=\$1 \\" >> bash_script.sh
+  echo "in2=\$2 \\" >> bash_script.sh
+  echo "out=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.fastq.gz \\" >> bash_script.sh
+  echo "rem k=62 iterations=5 extend2=20 ecct t=5 -Xmx160g \\" >> bash_script.sh
+  echo "> ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
+  chmod +x bash_script.sh
+  
+  #For every pair of paired-end sequence files submit job and grab job IDs
+  touch job_ids.txt
+  for file in ${SEQ_DIR}/*R1_001.${SEQ_EXT}; do
+    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
+    
+    sbatch --partition=short \
+    --job-name=${FILE_NAME} \
+    --error=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.ErrorOut/${FILE_NAME}.err \
+    --output=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.Output/${FILE_NAME}.out \
+    --time=12:00:00 \
+    --ntasks=1 \
+    --cpus-per-task=5 \
+    --mem-per-cpu=32000 \
+    --mail-type=FAIL \
+    --mail-user=${FAIL_EMAIL} \
+    ./bash_script.sh ${SEQ_DIR}/${FILE_NAME}_R1_001.${SEQ_EXT} ${SEQ_DIR}/${FILE_NAME}_R2_001.${SEQ_EXT} | \
+    awk '{print $4}' >> job_ids.txt
+  done
+  
+  #Hold script here until all jobs are completed
+  while :
+  do
+    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
+      sleep 1m
+      :
+    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
+      sleep 5m
+      :
+    else
+      break
+    fi
+  done
+  rm bash_script.sh
+  rm job_ids.txt
+  
+  #Signal jobs have ended
+  echo "Merging of paired end reads with BBMerge complete"
+  echo "Elapsed time: $(($SECONDS / 3600)) hr : $(($(($SECONDS % 3600)) / 60)) min : $(($SECONDS % 60)) sec"
+  echo " "
+fi
+#################################################
+
 ################# QC WITH BBDUK #################
 if echo $SKIP | grep -q "bbduk"; then
   echo " "
   echo "*** Skipping running of BBDuk for adapter/quality trimming and filtering of input fastq files ***"
   echo " "
+  
+  #Create directory
+  if [ -d "${RESULTS_DIR}/2.Quality_Controlled_Sequences" ]
+  then
+	  :
+  else
+	  mkdir ${RESULTS_DIR}/2.Quality_Controlled_Sequences
+	  mkdir ${RESULTS_DIR}/2.Quality_Controlled_Sequences/0.ErrorOut
+	  mkdir ${RESULTS_DIR}/2.Quality_Controlled_Sequences/0.Output
+  fi
 else
   SECONDS=0
   echo " "
@@ -459,22 +568,19 @@ else
   #Create shell script for running program
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
-  echo "FILE1=\$(echo \$1 | awk -F '/' '{print \$NF}')" >> bash_script.sh
-  echo "FILE2=\$(echo \$2 | awk -F '/' '{print \$NF}')" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+  echo "FILE=\$(echo \$1 | awk -F '/' '{print \$NF}')" >> bash_script.sh
   echo "bbduk.sh in=\$1 \\" >> bash_script.sh
-  echo "in2=\$2 \\" >> bash_script.sh
-  echo "out=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE1} \\" >> bash_script.sh
-  echo "out2=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE2} \\" >> bash_script.sh
+  echo "out=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE} \\" >> bash_script.sh
   echo "stats=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}_stats.txt \\" >> bash_script.sh
-  echo "ftm=5 tpe tbo qtrim=rl trimq=25 minlen=50 ref=adapters,phix -Xmx64000m \\" >> bash_script.sh
+  echo "ftm=5 qtrim=rl trimq=25 minlen=50 ref=adapters,phix -Xmx64g \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every pair of paired-end sequence files submit job and grab job IDs
+  #For every sequence file submit job and grab job IDs
   touch job_ids.txt
-  for file in ${SEQ_DIR}/*R1_001.${SEQ_EXT}; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
+  for file in ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/*.fastq.gz; do
+    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '.fastq.gz' '{print $1}')
     
     sbatch --partition=short \
     --job-name=${FILE_NAME} \
@@ -486,8 +592,7 @@ else
     --mem-per-cpu=64000 \
     --mail-type=FAIL \
     --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh ${SEQ_DIR}/${FILE_NAME}_R1_001.${SEQ_EXT} ${SEQ_DIR}/${FILE_NAME}_R2_001.${SEQ_EXT} | \
-    awk '{print $4}' >> job_ids.txt
+    ./bash_script.sh $file | awk '{print $4}' >> job_ids.txt
   done
   
   #Hold script here until all jobs are completed
@@ -518,6 +623,16 @@ if echo $SKIP | grep -q "kneaddata"; then
   echo " "
   echo "*** Skipping running of KneadData for removal of contaminant host reads ***"
   echo " "
+  
+  #Create directory
+  if [ -d "${RESULTS_DIR}/3.Decontaminated_Sequences" ]
+  then
+	  :
+  else
+	  mkdir ${RESULTS_DIR}/3.Decontaminated_Sequences
+	  mkdir ${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut
+	  mkdir ${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output
+  fi
 else
   SECONDS=0
   echo " "
@@ -538,9 +653,8 @@ else
   #Create shell script for running program
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
   echo "kneaddata --input \$1 \\" >> bash_script.sh
-  echo "--input \$2 \\" >> bash_script.sh
   echo "--output ${RESULTS_DIR}/3.Decontaminated_Sequences \\" >> bash_script.sh
   echo "--output-prefix \$FILE_NAME \\" >> bash_script.sh
   echo "--log ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_kneaddata.log \\" >> bash_script.sh
@@ -551,10 +665,10 @@ else
   echo "> ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every quality controlled pair of sequence files submit job and grab job IDs
+  #For every quality controlled sequence files submit job and grab job IDs
   touch job_ids.txt
-  for file in ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R1_001.${SEQ_EXT}; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
+  for file in ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz; do
+    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '.fastq.gz' '{print $1}')
     
     sbatch --partition=short \
     --job-name=${FILE_NAME} \
@@ -566,9 +680,7 @@ else
     --mem-per-cpu=32000 \
     --mail-type=FAIL \
     --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh ${RESULTS_DIR}/2.Quality_Controlled_Sequences/${FILE_NAME}_R1_001.${SEQ_EXT} \
-    ${RESULTS_DIR}/2.Quality_Controlled_Sequences/${FILE_NAME}_R2_001.${SEQ_EXT} | \
-    awk '{print $4}' >> job_ids.txt
+    ./bash_script.sh $file | awk '{print $4}' >> job_ids.txt
   done
   
   #Hold script here until all jobs are completed
@@ -586,8 +698,6 @@ else
   done
   rm job_ids.txt
   rm bash_script.sh
-  
-  rm ${RESULTS_DIR}/3.Decontaminated_Sequences/*unmatched*fastq
   
   ##### Gzip output #####
   echo "Compressing KneadData output..."
@@ -648,12 +758,12 @@ fi
 ###### TAXONOMIC AND FUNCTIONAL PROFILING #######
 if echo $SKIP | grep -q "humann"; then
   echo " "
-  echo "*** Skipping running of HUMAnN workflow for performing taxonomic and functional profiling ***"
+  echo "*** Skipping running of HUMAnN/MetaPhlAn workflow for performing taxonomic and functional profiling ***"
   echo " "
 else
   SECONDS=0
   echo " "
-  echo "*** Running HUMAnN workflow for performing taxonomic and functional profiling ***"
+  echo "*** Running HUMAnN/MetaPhlAn workflow for performing taxonomic and functional profiling ***"
   echo " "
   
   #Create directory for profiling output
@@ -670,9 +780,8 @@ else
   #Create shell script for running program
   echo '#!/bin/bash' > bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_paired_1' '{print \$1}')" >> bash_script.sh
-  echo "zcat \$1 \$2 > ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
-  echo "humann --input ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq \\" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+  echo "humann --input \$1 \\" >> bash_script.sh
   echo "--output ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling \\" >> bash_script.sh
   echo "--output-basename \$FILE_NAME \\" >> bash_script.sh
   echo "--metaphlan-options '-t rel_ab --add_viruses' \\" >> bash_script.sh
@@ -682,13 +791,12 @@ else
   echo "--threads 5 \\" >> bash_script.sh
   echo "--verbose \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.log 2>&1" >> bash_script.sh
-  echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every pair of decontaminated sequence files submit job and grab job IDs
+  #For every decontaminated sequence files submit job and grab job IDs
   touch job_ids.txt
-  for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_1.fastq.gz; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_paired_1' '{print $1}')
+  for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz; do
+    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '.fastq.gz' '{print $1}')
     
     sbatch --partition=medium \
     --job-name=${FILE_NAME} \
@@ -700,9 +808,7 @@ else
     --mem-per-cpu=32000 \
     --mail-type=FAIL \
     --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh ${RESULTS_DIR}/3.Decontaminated_Sequences/${FILE_NAME}_paired_1.fastq.gz \
-    ${RESULTS_DIR}/3.Decontaminated_Sequences/${FILE_NAME}_paired_2.fastq.gz | \
-    awk '{print $4}' >> job_ids.txt
+    ./bash_script.sh $file | awk '{print $4}' >> job_ids.txt
   done
   
   #Hold script here until all jobs are completed
