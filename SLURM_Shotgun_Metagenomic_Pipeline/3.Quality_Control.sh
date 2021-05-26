@@ -16,9 +16,9 @@ set -e
 #                reads. Also can remove PhiX sequences.      #
 #                                                            #
 # Usage:                                                     #
-# 3.Quality_Control.sh -o output_dir \                       #
-#                      -p 'commands; to; load; programs' \   #
-#                      -f notificationEmail@forFailures.edu  #
+# ./3.Quality_Control.sh -o output_dir \                     #
+#                        -p 'commands; to; load; programs' \ #
+#                        -f notificationEmail@forFailures.edu#
 #                                                            #
 # Parameters:                                                #
 #     -h    Print the parameter list below then exit.        #
@@ -53,9 +53,10 @@ while getopts ":ho:p:f:" opt; do
     echo "    BBDuk:      For adapter and quality trimming of raw wgs "
     echo "                reads. Also can remove PhiX sequences.      "
     echo "                                                            "
-    echo " 3.Quality_Control.sh -o output_dir \                       "
-    echo "                      -p 'commands; to; load; programs' \   "
-    echo "                      -f notificationEmail@forFailures.edu  "
+    echo " Usage:                                                     "
+    echo " ./3.Quality_Control.sh -o output_dir \                     "
+    echo "                        -p 'commands; to; load; programs' \ "
+    echo "                        -f notificationEmail@forFailures.edu"
     echo "                                                            "
     echo " Parameters:                                                "
     echo "     -h    Print the parameter list below then exit.        "
