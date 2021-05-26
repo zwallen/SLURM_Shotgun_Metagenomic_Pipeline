@@ -46,7 +46,7 @@ while getopts ":ho:" opt; do
     echo "                scheduling system.                          "
     echo "                                                            "
     echo " Usage:                                                     "
-    echo " 0.Initialize_Result_Directory.sh -o output_dir             "
+    echo " ./0.Initialize_Result_Directory.sh -o output_dir           "
     echo "                                                            "
     echo " Parameters:                                                "
     echo "     -h    Print the parameter list below then exit.        "
