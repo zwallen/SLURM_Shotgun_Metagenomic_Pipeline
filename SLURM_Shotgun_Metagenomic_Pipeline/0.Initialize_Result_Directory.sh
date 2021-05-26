@@ -7,9 +7,7 @@ set -e
 # Last updated: 26 May 2021                                  #
 #                                                            #
 # Description: Initialize the directory that pipeline results#
-# will be placed into. Make sure to run with "source" in     #
-# order to save the environmental variables created in this  #
-# in this script.                                            #
+# will be placed into.                                       #
 #                                                            #
 # Required programs and databases:                           #
 #    SLURM:      Program is designed to work with a SLURM    #
@@ -17,7 +15,7 @@ set -e
 #                scheduling system.                          #
 #                                                            #
 # Usage:                                                     #
-# source ./0.Initialize_Result_Directory.sh -o output_dir    #
+# ./0.Initialize_Result_Directory.sh -o output_dir           #
 #                                                            #
 # Parameters:                                                #
 #     -h    Print the parameter list below then exit.        #
@@ -94,4 +92,3 @@ fi
 echo " "
 echo "Directory for shotgun metagenomic pipeline output: Metagenomic_Pipeline_${DATE}"
 echo " "
-RESULTS_DIR="${OUT_DIR}/Metagenomic_Pipeline_${DATE}"
