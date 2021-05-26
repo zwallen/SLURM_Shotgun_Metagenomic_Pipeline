@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
