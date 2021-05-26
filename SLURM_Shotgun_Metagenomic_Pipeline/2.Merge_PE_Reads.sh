@@ -15,10 +15,10 @@ set -e
 #    BBMerge:    For merging paired-end reads.               #
 #                                                            #
 # Usage:                                                     #
-# 2.Merge_PE_Reads.sh -i input_seqs_dir \                    #
-#                     -o output_dir \                        #
-#                     -p 'commands; to; load; programs' \    #
-#                     -f notificationEmail@forFailures.edu   #
+# ./2.Merge_PE_Reads.sh -i input_seqs_dir \                  #
+#                       -o output_dir \                      #
+#                       -p 'commands; to; load; programs' \  #
+#                       -f notificationEmail@forFailures.edu #
 #                                                            #
 # Parameters:                                                #
 #     -h    Print the parameter list below then exit.        #
@@ -56,10 +56,11 @@ while getopts ":hi:o:p:f:" opt; do
     echo "                scheduling system.                          "
     echo "    BBMerge:    For merging paired-end reads.               "
     echo "                                                            "
-    echo " 2.Merge_PE_Reads.sh -i input_seqs_dir \                    "
-    echo "                     -o output_dir \                        "
-    echo "                     -p 'commands; to; load; programs' \    "
-    echo "                     -f notificationEmail@forFailures.edu   "
+    echo " Usage:                                                     "
+    echo " ./2.Merge_PE_Reads.sh -i input_seqs_dir \                  "
+    echo "                       -o output_dir \                      "
+    echo "                       -p 'commands; to; load; programs' \  "
+    echo "                       -f notificationEmail@forFailures.edu "
     echo "                                                            "
     echo " Parameters:                                                "
     echo "     -h    Print the parameter list below then exit.        "
