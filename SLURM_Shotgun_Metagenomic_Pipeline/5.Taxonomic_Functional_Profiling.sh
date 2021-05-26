@@ -28,7 +28,7 @@ set -e
 #                normalized abundance tables from MetaPhlAn. #
 #                                                            #
 # Usage:                                                     #
-# 5.Taxonomic_Functional_Profiling.sh -o output_dir \        #
+# ./5.Taxonomic_Functional_Profiling.sh -o output_dir \      #
 #                        -p 'commands; to; load; programs' \ #
 #                        -c path/to/chocophlan/dir \         #
 #                        -u path/to/uniref/dir \             #
@@ -83,7 +83,8 @@ while getopts ":ho:p:c:u:m:f:" opt; do
     echo "                clade marker taxonomy lineages in the       "
     echo "                normalized abundance tables from MetaPhlAn. "
     echo "                                                            "
-    echo " 5.Taxonomic_Functional_Profiling.sh -o output_dir \        "
+    echo " Usage:                                                     "
+    echo " ./5.Taxonomic_Functional_Profiling.sh -o output_dir \      "
     echo "                        -p 'commands; to; load; programs' \ "
     echo "                        -c path/to/chocophlan/dir \         "
     echo "                        -u path/to/uniref/dir \             "
