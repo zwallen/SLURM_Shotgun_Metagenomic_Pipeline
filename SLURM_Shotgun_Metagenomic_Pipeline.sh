@@ -487,7 +487,7 @@ else
   echo "bbmerge.sh in1=\$1 \\" >> bash_script.sh
   echo "in2=\$2 \\" >> bash_script.sh
   echo "out=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.fastq.gz \\" >> bash_script.sh
-  echo "rem k=62 iterations=5 extend2=20 ecct t=5 -Xmx160g \\" >> bash_script.sh
+  echo "rem k=62 iterations=5 extend2=20 ecct t=2 -Xmx64g \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
@@ -502,8 +502,8 @@ else
     --output=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.Output/${FILE_NAME}.out \
     --time=12:00:00 \
     --ntasks=1 \
-    --cpus-per-task=5 \
-    --mem-per-cpu=32000 \
+    --cpus-per-task=1 \
+    --mem-per-cpu=64000 \
     --mail-type=FAIL \
     --mail-user=${FAIL_EMAIL} \
     ./bash_script.sh ${SEQ_DIR}/${FILE_NAME}_R1_001.${SEQ_EXT} ${SEQ_DIR}/${FILE_NAME}_R2_001.${SEQ_EXT} | \
