@@ -17,7 +17,7 @@ set -e
 #                map reads against.                          #
 #                                                            #
 # Usage:                                                     #
-# 4.Remove_Host_Reads.sh -o output_dir \                     #
+# ./4.Remove_Host_Reads.sh -o output_dir \                   #
 #                        -p 'commands; to; load; programs' \ #
 #                        -r path/to/host/ref/files/dir \     #
 #                        -f notificationEmail@forFailures.edu#
@@ -59,7 +59,7 @@ while getopts ":ho:p:r:f:" opt; do
     echo "                map reads against.                          "
     echo "                                                            "
     echo " Usage:                                                     "
-    echo " 4.Remove_Host_Reads.sh -o output_dir \                     "
+    echo " ./4.Remove_Host_Reads.sh -o output_dir \                   "
     echo "                        -p 'commands; to; load; programs' \ "
     echo "                        -r path/to/host/ref/files/dir \     "
     echo "                        -f notificationEmail@forFailures.edu"
