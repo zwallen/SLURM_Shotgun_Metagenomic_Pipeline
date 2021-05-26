@@ -15,6 +15,7 @@ set -e
 #                scheduling system.                          #
 #    FastQC:     For performing initial quality reports.     #
 #                                                            #
+# Usage:                                                     #
 # ./1.FastQC.sh -i input_seqs_dir \                          #
 #               -o output_dir \                              #
 #               -p 'commands; to; load; programs' \          #
@@ -57,6 +58,7 @@ while getopts ":hi:o:p:f:" opt; do
     echo "                scheduling system.                          "
     echo "    FastQC:     For performing initial quality reports.     "
     echo "                                                            "
+    echo " Usage:                                                     "
     echo " ./1.FastQC.sh -i input_seqs_dir \                          "
     echo "               -o output_dir \                              "
     echo "               -p 'commands; to; load; programs' \          "
