@@ -1,10 +1,15 @@
-This github repository houses a wrapper program (**SLURM_Shotgun_Metagenomic_Pipeline.sh**) for processing metagenomic sequences (derived from Illumina paired-end whole genome shotgun sequencing) to taxonomic (relative abundances and normalized abundance counts) and functional (gene and pathway) profiles on a high performance computing cluster using a SLURM scheduling system. The overall pipeline includes performing an intitial quality assessment on raw sequences using FastQC [https://www.bioinformatics.babraham.ac.uk/projects/fastqc/], adapter removal and quality trimming/filtering using BBDuk [https://sourceforge.net/projects/bbmap/], removal of host contaminant reads using Bowtie2 as implemented in Kneaddata [https://huttenhower.sph.harvard.edu/kneaddata/], and lastly taxonomic and functional profiling using MetaPhlAn/HUMAnN workflow [https://huttenhower.sph.harvard.edu/humann/]. A convenience script is also located in the repository that wraps GraPhlAn [https://huttenhower.sph.harvard.edu/graphlan/] for generating a cladogram of top most abundant clades detected by MetaPhlAn (**Create_Cladogram.sh**).
+This github repository houses a wrapper program (**SLURM_Shotgun_Metagenomic_Pipeline.sh**) for processing shotgun metagenomic sequences (derived from Illumina paired-end whole genome shotgun sequencing) to taxonomic (relative abundances and normalized abundance counts) and functional (gene and pathway) profiles on a high performance computing cluster using a SLURM scheduling system. The overall pipeline includes performing an intitial quality assessment on raw sequences using FastQC [https://www.bioinformatics.babraham.ac.uk/projects/fastqc/], merging of paired-end reads using BBMerge [https://sourceforge.net/projects/bbmap/], adapter removal and quality trimming/filtering using BBDuk [https://sourceforge.net/projects/bbmap/], removal of host contaminant reads using Bowtie2 as implemented in KneadData [https://huttenhower.sph.harvard.edu/kneaddata/], and lastly taxonomic and functional profiling using MetaPhlAn/HUMAnN workflow [https://huttenhower.sph.harvard.edu/humann/]. A convenience script is also located in the repository that wraps GraPhlAn [https://huttenhower.sph.harvard.edu/graphlan/] for generating a cladogram of top most abundant clades detected by MetaPhlAn (**Create_Cladogram.sh**).
 
 The following gives an overview of the overall structure of the repository:
 
 ## Directory tree for repository
 ```
-Shotgun_Metagenomic_Pipeline
+SLURM_Shotgun_Metagenomic_Pipeline
+|
+|-- SLURM_Shotgun_Metagenomic_Pipeline -- Directory that contains separate shell scripts for each step of the pipeline.
+|                                         Instead of running the whole pipeline at once using the main wrapper script (SLURM_Shotgun_Metagenomic_Pipeline.sh),
+|                                         one can run it in chunks using these scripts. Useful for when the dataset is large, and will not finish running
+|                                         with using the main wrapper script, or if the main wrapper script failed or had to be stopped at a certain step.
 |
 |-- Reference_Files -- Directory that contains the shell script 0.get_reference_files.sh.
 |                      Running 0.get_reference_files.sh will download all the necessary and most up to date reference files and databases
@@ -25,10 +30,16 @@ Shotgun_Metagenomic_Pipeline
 The **SLURM_Shotgun_Metagenomic_Pipeline.sh** script will internally submit a job for each pair of sequence files for each step of the pipeline. For each job step, a "bash_script.sh" and "job_ids.txt" file is created in the current directory that contains the code and the job IDs for the currently running step, and is deleted once the step completes. Default partitions and time-limits for these jobs have been chosen based on previous experience, but there is always a chance that jobs might take longer if sequence files being processed are larger than what the program was tested with. This pipeline was created and tested using 372 paired sequence files (744 total) derived from paired-end 150bp sequencing with a target of 40M total reads per sample (gzipped sequence file sizes ranged from 1.4-4.5G). If needing to modify the partitions and/or time-limits, one can simply pop open the pipeline script and modify where needed.
 
 ### Job hang-ups
-While testing the pipeline it was noted that every now and then some jobs submitted by the **SLURM_Shotgun_Metagenomic_Pipeline.sh** script would fail, or get stalled. This seemed to be glitches with the scheduling system itself and not so much the program. Regardless, it is good practice to keep an eye on running jobs to make sure one is not running obsurdly long. The pipeline program is designed to hold at a step until all jobs are completed, so if a job seems to be stalled, it will have to be killed for the pipeline to move foward. If an individual job does fail suddenly or get stalled, my advice would be to quickly resubmit the failed, or stalled, job manually using the current pipeline step's "bash_script.sh" with the appropriate input and add the resulting job ID to the "job_ids.txt" file for the current step, so the pipeline script won't move on without finishing this job.
+While testing the pipeline it was noted that every now and then some jobs submitted by the **SLURM_Shotgun_Metagenomic_Pipeline.sh** script would fail, or get stalled. This seemed to be glitches with the scheduling system itself and not so much the wrapper program. Regardless, it is good practice to keep an eye on running jobs to make sure one is not running obsurdly long. The pipeline program is designed to hold at a step until all jobs are completed, so if a job seems to be stalled, it will have to be killed for the pipeline to move foward. If an individual job does fail suddenly or get stalled, my advice would be to quickly resubmit the failed, or stalled, job manually using the current pipeline step's "bash_script.sh" with the appropriate input and add the resulting job ID to the "job_ids.txt" file for the current step, so the pipeline script won't move on without finishing this job.
+
+### Pipeline steps beginning pre-maturely
+As mentioned above, the **SLURM_Shotgun_Metagenomic_Pipeline.sh** script is designed to hold at a step until all jobs submitted at that step are finished. The code loop that holds at a particular step was designed to hold even if errors occur with the holding loop, but periodically this loop still manages to fail (most likely due to hiccups with the scheduling system). Be sure to keep an eye on how the pipeline is proceeding to make sure one step is not bleeding into a previous one.
 
 ### Required programs/databases and parameter descriptions
 For descriptions of required programs/databases and parameters for **SLURM_Shotgun_Metagenomic_Pipeline.sh** or **Create_Cladogram.sh** scripts, run the respective script with parameter '-h'.
+
+### Separate shell scripts for individual pipeline steps
+The directory `SLURM_Shotgun_Metagenomic_Pipeline` contains separate shell scripts that can perform each step of the pipeline individually, and are numbered in the sequence they are performed in the wrapper script **SLURM_Shotgun_Metagenomic_Pipeline.sh**. These have been provided as an alternative to running the whole pipeline in one shot. Using these can be useful if the dataset being processed is very large, and will not complete in time using the one shot **SLURM_Shotgun_Metagenomic_Pipeline.sh** wrapper script. Additionally, these are useful if the main wrapper script has failed, or stopped, at a certain step, and you want to continue with the pipeline without having to re-run the **SLURM_Shotgun_Metagenomic_Pipeline.sh** script, essentially starting the pipeline over.
 
 ```
 ./SLURM_Shotgun_Metagenomic_Pipeline.sh -h
@@ -36,7 +47,7 @@ For descriptions of required programs/databases and parameters for **SLURM_Shotg
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 24 May 2021                                  #
+# Last updated: 25 May 2021                                  #
 ##############################################################
  
  Description: This is a wrapper program that wraps various  
@@ -50,6 +61,7 @@ For descriptions of required programs/databases and parameters for **SLURM_Shotg
                 high performance computing cluster          
                 scheduling system.                          
     FastQC:     For performing initial quality reports.     
+    BBMerge:    For merging paired-end reads.               
     BBDuk:      For adapter and quality trimming of raw wgs 
                 reads. Also can remove PhiX sequences.      
     KneadData:  For removing host contamination from wgs    
@@ -67,7 +79,7 @@ For descriptions of required programs/databases and parameters for **SLURM_Shotg
     Markers:    File with ChocoPhlAn GeneIDs and marker     
                 taxonomies. Used for replacing GeneIDs with 
                 clade marker taxonomy lineages in the       
-                normalized abundance tables from MetaPhlAn.                    
+                normalized abundance tables from MetaPhlAn. 
                                                             
  Usage:                                                     
  SLURM_Shotgun_Metagenomic_Pipeline.sh -i input_seqs_dir \  
@@ -102,12 +114,12 @@ For descriptions of required programs/databases and parameters for **SLURM_Shotg
      -m    (Required) Path to clade marker info file        
            mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2    
      -f    (Required) E-mail to send notifications to upon  
-           failure of any jobs.
+           failure of any jobs.                             
      -s    (Optional) Skip certain steps in the pipeline if 
            need be. Provide a comma separated list of steps 
            that you wish to skip in the pipeline. List may  
-           have the values: fastqc, bbduk, kneaddata,       
-           humann.
+           have the values: fastqc, bbmerge, bbduk,         
+           kneaddata, humann.
 ```
 ```
 ./Create_Cladogram.sh -h
