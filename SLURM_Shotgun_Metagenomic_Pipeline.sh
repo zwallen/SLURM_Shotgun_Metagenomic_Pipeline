@@ -296,25 +296,11 @@ elif echo $FAIL_EMAIL | grep -q -v '@'; then
   echo "ERROR: Argument -f requires a valid email, please give an email in the form of xxxx@xxxx.xxx"
 fi
 
-# -a
-if [[ ! -z "$TAX_16S" ]]; then
-  if [[ -z "$EXTRACT_16S" ]]; then
-    echo "ERROR: when performing additional 16S-based taxonomic profiling, parameter -e is required, please supply a fasta reference file to use for extracting 16S sequences"
-    exit 1
-  elif [[ -z "$TRAIN_16S" ]]; then
-    echo "ERROR: when performing additional 16S-based taxonomic profiling, parameter -t is required, please supply a fasta reference file to use for training and classifying with RDP classifier"
-    exit 1
-  elif [[ -z "$CLASS_LOC" ]]; then
-    echo "ERROR: when performing additional 16S-based taxonomic profiling, parameter -l is required, please supply the location of the classifier.jar file for running the RDP classifier"
-    exit 1
-  else
-    :
-  fi
-fi
-
 # -s
 if [[ ! -z "$SKIP" ]]; then
   if echo $SKIP | grep -q "fastqc"; then
+    :
+  elif echo $SKIP | grep -q "bbmerge"; then
     :
   elif echo $SKIP | grep -q "bbduk"; then
     :
@@ -322,10 +308,8 @@ if [[ ! -z "$SKIP" ]]; then
     :
   elif echo $SKIP | grep -q "humann"; then
     :
-  elif echo $SKIP | grep -q "graphlan"; then
-    :
   else
-    echo "ERROR: Invalid argument given to -s, please specify one or more of: fastqc_initial,bbmerge,bbduk,kneaddata,fastqc_postqc,humann,graphlan"
+    echo "ERROR: Invalid argument given to -s, please specify one or more of: fastqc,bbmerge,bbduk,kneaddata,humann"
     exit 1
   fi
 fi
