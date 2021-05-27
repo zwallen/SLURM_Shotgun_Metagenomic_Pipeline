@@ -63,6 +63,8 @@ set -e
 #           needed to run pipeline steps (e.g. activating    #
 #           conda environments, loading modules, adding to   #
 #           PATH, etc.).                                     #
+#     -a    (Required) Path to adapters.fa file that comes   #
+#           packaged with BBMerge and BBDuk.                 #
 #     -r    (Required) Path to directory of host genome      #
 #           Bowtie2 indexed reference files (.bt2 files).    #
 #     -c    (Required) Path to ChocoPhlAn database directory.#
@@ -87,7 +89,7 @@ echo "##############################################################"
 echo " "
 
 # Argument parsing
-while getopts ":hi:o:p:r:c:u:m:f:s:" opt; do
+while getopts ":hi:o:p:a:r:c:u:m:f:s:" opt; do
   case $opt in
     h)
     echo " Description: This is a wrapper program that wraps various  "
@@ -147,6 +149,8 @@ while getopts ":hi:o:p:r:c:u:m:f:s:" opt; do
     echo "           needed to run pipeline steps (e.g. activating    "
     echo "           conda environments, loading modules, adding to   "
     echo "           PATH, etc.).                                     "
+    echo "     -a    (Required) Path to adapters.fa file that comes   "
+    echo "           packaged with BBMerge and BBDuk.                 "
     echo "     -r    (Required) Path to directory of host genome      "
     echo "           Bowtie2 indexed reference files (.bt2 files).    "
     echo "     -c    (Required) Path to ChocoPhlAn database directory."
@@ -168,6 +172,8 @@ while getopts ":hi:o:p:r:c:u:m:f:s:" opt; do
     o) OUT_DIR=$(echo $OPTARG | sed 's#/$##')
     ;;
     p) PROG_LOAD="$OPTARG"
+    ;;
+    a) ADAPTERS="$OPTARG"
     ;;
     r) HOST_REF=$(echo $OPTARG | sed 's#/$##')
     ;;
@@ -235,6 +241,20 @@ fi
 # -p
 if [[ -z "$PROG_LOAD" ]]; then
   echo "ERROR: Argument -p is required, please supply a single quoted string of commands needed to load required programs (can be an empty string ' ' if none required)"
+  exit 1
+fi
+
+# -a
+if [[ -z "$ADAPTERS" ]]; then
+  echo "ERROR: Argument -a is required, please supply path to the adapters.fa file that comes with BBMerge and BBDuk"
+  exit 1
+fi
+if [[ -d "$ADAPTERS" ]]; then
+  echo "ERROR: Argument -a should be the path to a single file, not a directory, please supply path to the adapters.fa file that comes with BBMerge and BBDuk"
+  exit 1
+fi
+if echo $ADAPTERS | grep -q -v "adapters\.fa"; then
+  echo "ERROR: path given to -o does not contain the file name adapters.fa, please supply the adapters.fa file that comes with BBMerge and BBDuk to this argument"
   exit 1
 fi
 
@@ -466,6 +486,7 @@ else
   echo "bbmerge.sh in1=\$FILE1 \\" >> bash_script.sh
   echo "in2=\$FILE2 \\" >> bash_script.sh
   echo "out=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.fastq.gz \\" >> bash_script.sh
+  echo "adapters=${ADAPTERS} \\" >> bash_script.sh
   echo "rem k=31 iterations=5 extend2=20 ecct t=2 -Xmx32g \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
