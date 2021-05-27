@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 25 May 2021                                  #
+# Last updated: 27 May 2021                                  #
 #                                                            #
 # Description: This is a wrapper program that wraps various  #
 # programs to process raw paired-end whole genome shotgun    #
@@ -82,7 +82,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 25 May 2021                                  #"
+echo "# Last updated: 27 May 2021                                  #"
 echo "##############################################################"
 echo " "
 
@@ -360,48 +360,31 @@ else
   fi
   
   ##### Run FastQC #####
-  #Create shell script for running program
+  #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
+  echo "#SBATCH --partition=express" >> bash_script.sh
+  echo "#SBATCH --job-name=FastQC" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/0.FastQC_Initial_Reports/0.ErrorOut/FastQC_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/0.FastQC_Initial_Reports/0.Output/FastQC_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --time=2:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=1" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --array=1-$(ls -l ${SEQ_DIR}/*R1_001.${SEQ_EXT} | wc -l)" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
-  echo "fastqc \$1 \$2 -d ${RESULTS_DIR}/0.FastQC_Initial_Reports -o ${RESULTS_DIR}/0.FastQC_Initial_Reports \\" >> bash_script.sh
+  echo "FILE1=\$(ls ${SEQ_DIR}/*R1_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "FILE2=\$(ls ${SEQ_DIR}/*R2_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
+  echo "fastqc \$FILE1 \$FILE2 -d ${RESULTS_DIR}/0.FastQC_Initial_Reports -o ${RESULTS_DIR}/0.FastQC_Initial_Reports \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/0.FastQC_Initial_Reports/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every sequence file submit job and grab job IDs
-  touch job_ids.txt
-  for file in ${SEQ_DIR}/*R1_001.${SEQ_EXT}; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
-    
-    sbatch --partition=short \
-    --job-name=${FILE_NAME} \
-    --error=${RESULTS_DIR}/0.FastQC_Initial_Reports/0.ErrorOut/${FILE_NAME}.err \
-    --output=${RESULTS_DIR}/0.FastQC_Initial_Reports/0.Output/${FILE_NAME}.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=1 \
-    --mem-per-cpu=64000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh ${SEQ_DIR}/${FILE_NAME}_R1_001.${SEQ_EXT} ${SEQ_DIR}/${FILE_NAME}_R2_001.${SEQ_EXT} | \
-    awk '{print $4}' >> job_ids.txt
-  done
+  sbatch bash_script.sh
   
-  #Hold script here until all jobs are completed
-  while :
-  do
-    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
-      sleep 1m
-      :
-    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
-      sleep 5m
-      :
-    else
-      break
-    fi
-  done
   rm bash_script.sh
-  rm job_ids.txt
   
   #Signal jobs have ended
   echo "FastQC reports complete"
@@ -462,53 +445,34 @@ else
   fi
   
   ##### Run BBMerge #####
-  #Create shell script for running program
+  #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
+  echo "#SBATCH --partition=short" >> bash_script.sh
+  echo "#SBATCH --job-name=Merge" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.ErrorOut/Merge_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.Output/Merge_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --time=12:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=5" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --array=1-$(ls -l ${SEQ_DIR}/*R1_001.${SEQ_EXT} | wc -l)" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
-  echo "FILE1=\$(echo \$1 | awk -F '/' '{print \$NF}')" >> bash_script.sh
-  echo "FILE2=\$(echo \$2 | awk -F '/' '{print \$NF}')" >> bash_script.sh
-  echo "bbmerge.sh in1=\$1 \\" >> bash_script.sh
-  echo "in2=\$2 \\" >> bash_script.sh
+  echo "FILE1=\$(ls ${SEQ_DIR}/*R1_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "FILE2=\$(ls ${SEQ_DIR}/*R2_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
+  echo "bbmerge.sh in1=\$FILE1 \\" >> bash_script.sh
+  echo "in2=\$FILE2 \\" >> bash_script.sh
   echo "out=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.fastq.gz \\" >> bash_script.sh
   echo "rem k=31 iterations=5 extend2=20 ecct t=5 -Xmx160g \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every pair of paired-end sequence files submit job and grab job IDs
-  touch job_ids.txt
-  for file in ${SEQ_DIR}/*R1_001.${SEQ_EXT}; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
-    
-    sbatch --partition=short \
-    --job-name=${FILE_NAME} \
-    --error=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.ErrorOut/${FILE_NAME}.err \
-    --output=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.Output/${FILE_NAME}.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=5 \
-    --mem-per-cpu=32000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh ${SEQ_DIR}/${FILE_NAME}_R1_001.${SEQ_EXT} ${SEQ_DIR}/${FILE_NAME}_R2_001.${SEQ_EXT} | \
-    awk '{print $4}' >> job_ids.txt
-  done
+  sbatch bash_script.sh
   
-  #Hold script here until all jobs are completed
-  while :
-  do
-    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
-      sleep 1m
-      :
-    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
-      sleep 5m
-      :
-    else
-      break
-    fi
-  done
   rm bash_script.sh
-  rm job_ids.txt
   
   #Signal jobs have ended
   echo "Merging of paired end reads with BBMerge complete"
@@ -549,51 +513,33 @@ else
   fi
   
   ##### Run BBDuk #####
-  #Create shell script for running program
+  #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
+  echo "#SBATCH --partition=short" >> bash_script.sh
+  echo "#SBATCH --job-name=QC" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/2.Quality_Controlled_Sequences/0.ErrorOut/QC_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/2.Quality_Controlled_Sequences/0.Output/QC_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --time=12:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=1" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
-  echo "FILE=\$(echo \$1 | awk -F '/' '{print \$NF}')" >> bash_script.sh
-  echo "bbduk.sh in=\$1 \\" >> bash_script.sh
-  echo "out=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE} \\" >> bash_script.sh
+  echo "FILE=\$(ls ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+  echo "bbduk.sh in=\$FILE \\" >> bash_script.sh
+  echo "out=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}.fastq.gz \\" >> bash_script.sh
   echo "stats=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}_stats.txt \\" >> bash_script.sh
-  echo "ftm=5 qtrim=rl trimq=25 minlen=50 ref=adapters,phix -Xmx64g \\" >> bash_script.sh
+  echo "ftm=5 qtrim=rl trimq=25 minlen=50 ref=adapters,phix -Xmx32g \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every sequence file submit job and grab job IDs
-  touch job_ids.txt
-  for file in ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/*.fastq.gz; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '.fastq.gz' '{print $1}')
-    
-    sbatch --partition=short \
-    --job-name=${FILE_NAME} \
-    --error=${RESULTS_DIR}/2.Quality_Controlled_Sequences/0.ErrorOut/${FILE_NAME}.err \
-    --output=${RESULTS_DIR}/2.Quality_Controlled_Sequences/0.Output/${FILE_NAME}.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=1 \
-    --mem-per-cpu=64000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh $file | awk '{print $4}' >> job_ids.txt
-  done
+  sbatch bash_script.sh
   
-  #Hold script here until all jobs are completed
-  while :
-  do
-    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
-      sleep 1m
-      :
-    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
-      sleep 5m
-      :
-    else
-      break
-    fi
-  done
   rm bash_script.sh
-  rm job_ids.txt
   
   #Signal jobs have ended
   echo "Quality control with BBDuk complete"
@@ -634,11 +580,24 @@ else
   fi
   
   ##### Run KneadData #####
-  #Create shell script for running program
+  #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
+  echo "#SBATCH --partition=short" >> bash_script.sh
+  echo "#SBATCH --job-name=Decontam" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Decontam_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/Decontam_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --time=12:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=5" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
-  echo "kneaddata --input \$1 \\" >> bash_script.sh
+  echo "FILE=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+  echo "kneaddata --input \$FILE \\" >> bash_script.sh
   echo "--output ${RESULTS_DIR}/3.Decontaminated_Sequences \\" >> bash_script.sh
   echo "--output-prefix \$FILE_NAME \\" >> bash_script.sh
   echo "--log ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_kneaddata.log \\" >> bash_script.sh
@@ -649,80 +608,34 @@ else
   echo "> ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every quality controlled sequence files submit job and grab job IDs
-  touch job_ids.txt
-  for file in ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '.fastq.gz' '{print $1}')
-    
-    sbatch --partition=short \
-    --job-name=${FILE_NAME} \
-    --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/${FILE_NAME}.err \
-    --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/${FILE_NAME}.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=5 \
-    --mem-per-cpu=32000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh $file | awk '{print $4}' >> job_ids.txt
-  done
+  sbatch bash_script.sh
   
-  #Hold script here until all jobs are completed
-  while :
-  do
-    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
-      sleep 1m
-      :
-    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
-      sleep 5m
-      :
-    else
-      break
-    fi
-  done
-  rm job_ids.txt
   rm bash_script.sh
   
   ##### Gzip output #####
   echo "Compressing KneadData output..."
   echo " "
   
-  #Create shell script for running program
+  #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
-  echo "gzip \$1" >> bash_script.sh
+  echo "#SBATCH --partition=short" >> bash_script.sh
+  echo "#SBATCH --job-name=Gzip" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Gzip_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/Gzip_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --time=12:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=1" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq | wc -l)" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
+  echo "FILE=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "gzip \$FILE" >> bash_script.sh
+  chmod +x bash_script.sh
   
-  #For every fastq file submit job and grab job IDs
-  touch job_ids.txt
-  for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '.fastq' '{print $1}' OFS='_')
-    
-    sbatch --partition=short \
-    --job-name=${FILE_NAME} \
-    --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/${FILE_NAME}_gzip.err \
-    --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/${FILE_NAME}_gzip.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=1 \
-    --mem-per-cpu=64000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh $file | awk '{print $4}' >> job_ids.txt
-  done
+  sbatch bash_script.sh
   
-  #Hold script here until all jobs are completed
-  while :
-  do
-    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
-      sleep 1m
-      :
-    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
-      sleep 5m
-      :
-    else
-      break
-    fi
-  done
-  rm job_ids.txt
   rm bash_script.sh
   
   echo "Done"
@@ -761,11 +674,24 @@ else
   fi
   
   ##### Run HUMAnN workflow #####
-  #Create shell script for running program
+  #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
+  echo "#SBATCH --partition=medium" >> bash_script.sh
+  echo "#SBATCH --job-name=Profiling" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/Profiling_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/Profiling_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --time=50:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=5" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
-  echo "humann --input \$1 \\" >> bash_script.sh
+  echo "FILE=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+  echo "humann --input \$FILE \\" >> bash_script.sh
   echo "--output ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling \\" >> bash_script.sh
   echo "--output-basename \$FILE_NAME \\" >> bash_script.sh
   echo "--metaphlan-options '-t rel_ab --add_viruses' \\" >> bash_script.sh
@@ -777,94 +703,47 @@ else
   echo "> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every decontaminated sequence files submit job and grab job IDs
-  touch job_ids.txt
-  for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '.fastq.gz' '{print $1}')
-    
-    sbatch --partition=medium \
-    --job-name=${FILE_NAME} \
-    --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/${FILE_NAME}_humann.err \
-    --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/${FILE_NAME}_humann.out \
-    --time=50:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=5 \
-    --mem-per-cpu=32000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh $file | awk '{print $4}' >> job_ids.txt
-  done
+  sbatch bash_script.sh
   
-  #Hold script here until all jobs are completed
-  while :
-  do
-    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
-      sleep 1m
-      :
-    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
-      sleep 5m
-      :
-    else
-      break
-    fi
-  done
-  rm job_ids.txt
   rm bash_script.sh
   
   ##### Run MetaPhlAn again to get normalized counts #####
-  #Create shell script for running program
+  #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
+  echo "#SBATCH --partition=short" >> bash_script.sh
+  echo "#SBATCH --job-name=Norm_Abun" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/Norm_Abun_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/Norm_Abun_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --time=12:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=1" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*humann_temp | wc -l)" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_humann_temp' '{print \$1}')" >> bash_script.sh
+  echo "DIR=\$(ls ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*humann_temp | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$DIR | awk -F '/' '{print \$NF}' | awk -F '_humann_temp' '{print \$1}')" >> bash_script.sh
   echo "metaphlan --input_type bowtie2out \\" >> bash_script.sh
   echo "--add_viruses \\" >> bash_script.sh
   echo "-t marker_ab_table \\" >> bash_script.sh
-  echo "\${1}/\${FILE_NAME}_metaphlan_bowtie2.txt \\" >> bash_script.sh
-  echo "\${1}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv \\" >> bash_script.sh
+  echo "\${DIR}/\${FILE_NAME}_metaphlan_bowtie2.txt \\" >> bash_script.sh
+  echo "\${DIR}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv \\" >> bash_script.sh
   echo ">> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   echo "join -j 1 -o 1.3,1.2,2.2 \\" >> bash_script.sh
   echo "<(sort -k1,1 <(paste <(bzcat $MARKERS | awk -F\"\t\" '{print \$1}') \\" >> bash_script.sh
   echo "                     <(bzcat $MARKERS | awk -F\"__\" '{print \$1}') \\" >> bash_script.sh
   echo "                     <(bzcat $MARKERS | awk -F\"('taxon': '|'})\" '{print \$2}'))) \\" >> bash_script.sh
-  echo "<(sort -k1,1 \${1}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv) | \\" >> bash_script.sh
+  echo "<(sort -k1,1 \${DIR}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv) | \\" >> bash_script.sh
   echo "sed '1s/^/#clade_name NCBI_tax_id normalized_abundance\n/' | sed 's/ /\t/g' | \\" >> bash_script.sh
   echo "awk 'FNR==1{print;next}{val=\$3;\$3=\"~\";a[\$0]+=val}"'!'"b[\$0]++{c[++count]=\$0}END{for(i=1;i<=count;i++){sub(\"~\",a[c[i]],c[i]);print c[i]}}' OFS='\t' | \\" >> bash_script.sh
-  echo "cat <(grep '^#' \${1}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv) - > \${FILE_NAME}_temp.txt" >> bash_script.sh
-  echo "mv \${FILE_NAME}_temp.txt \${1}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv" >> bash_script.sh
+  echo "cat <(grep '^#' \${DIR}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv) - > \${FILE_NAME}_temp.txt" >> bash_script.sh
+  echo "mv \${FILE_NAME}_temp.txt \${DIR}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv" >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every metaphlan output submit job and grab job IDs
-  touch job_ids.txt
-  for dir in ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*humann_temp; do
-    FILE_NAME=$(echo $dir | awk -F '/' '{print $NF}' | awk -F '_humann_temp' '{print $1}')
-    
-    sbatch --partition=short \
-    --job-name=${FILE_NAME} \
-    --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/${FILE_NAME}_metaphlan.err \
-    --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/${FILE_NAME}_metaphlan.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=1 \
-    --mem-per-cpu=64000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh $dir | awk '{print $4}' >> job_ids.txt
-  done
+  sbatch bash_script.sh
   
-  #Hold script here until all jobs are completed
-  while :
-  do
-    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
-      sleep 1m
-      :
-    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
-      sleep 5m
-      :
-    else
-      break
-    fi
-  done
-  rm job_ids.txt
   rm bash_script.sh
   
   ##### Clean up #####
@@ -901,8 +780,7 @@ else
     cp ${dir}/*pathcoverage.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
   done
   
-  touch job_ids.txt
-  
+  #Create individual scripts for running table merging
   echo '#!/bin/bash' > bash_script_1.sh
   echo "$PROG_LOAD" >> bash_script_1.sh
   echo "merge_metaphlan_tables.py ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*metaphlan_rel_abun_table.tsv \\" >> bash_script_1.sh
@@ -910,36 +788,12 @@ else
   echo "sed -i '2s/_metaphlan_rel_abun_table//g' ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/metaphlan_rel_abun_table.tsv" >> bash_script_1.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*metaphlan_rel_abun_table.tsv" >> bash_script_1.sh
   
-  sbatch --partition=short \
-    --job-name=metaphlan_rel_abun_merge \
-    --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/metaphlan_rel_abun_merge.err \
-    --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/metaphlan_rel_abun_merge.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=1 \
-    --mem-per-cpu=64000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script_1.sh | awk '{print $4}' >> job_ids.txt
-  
   echo '#!/bin/bash' > bash_script_2.sh
   echo "$PROG_LOAD" >> bash_script_2.sh
   echo "merge_metaphlan_tables.py ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*metaphlan_norm_abun_table.tsv \\" >> bash_script_2.sh
   echo "> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/metaphlan_norm_abun_table.tsv" >> bash_script_2.sh
   echo "sed -i '2s/_metaphlan_norm_abun_table//g' ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/metaphlan_norm_abun_table.tsv" >> bash_script_2.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*metaphlan_norm_abun_table.tsv" >> bash_script_2.sh
-  
-  sbatch --partition=short \
-    --job-name=metaphlan_norm_abun_merge \
-    --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/metaphlan_norm_abun_merge.err \
-    --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/metaphlan_norm_abun_merge.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=1 \
-    --mem-per-cpu=64000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script_2.sh | awk '{print $4}' >> job_ids.txt
     
   echo '#!/bin/bash' > bash_script_3.sh
   echo "$PROG_LOAD" >> bash_script_3.sh
@@ -948,36 +802,12 @@ else
   echo "--file_name genefamilies.tsv" >> bash_script_3.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*genefamilies.tsv" >> bash_script_3.sh
   
-  sbatch --partition=short \
-    --job-name=genefamilies_merge \
-    --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/genefamilies_merge.err \
-    --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/genefamilies_merge.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=1 \
-    --mem-per-cpu=64000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script_3.sh | awk '{print $4}' >> job_ids.txt
-  
   echo '#!/bin/bash' > bash_script_4.sh
   echo "$PROG_LOAD" >> bash_script_4.sh
   echo "humann_join_tables --input ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/ \\" >> bash_script_4.sh
   echo "--output ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/humann_pathabundance.tsv \\" >> bash_script_4.sh
   echo "--file_name pathabundance.tsv" >> bash_script_4.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*pathabundance.tsv" >> bash_script_4.sh
-  
-  sbatch --partition=short \
-    --job-name=pathabundance_merge \
-    --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/pathabundance_merge.err \
-    --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/pathabundance_merge.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=1 \
-    --mem-per-cpu=64000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script_4.sh | awk '{print $4}' >> job_ids.txt
 
   echo '#!/bin/bash' > bash_script_5.sh
   echo "$PROG_LOAD" >> bash_script_5.sh
@@ -986,33 +816,26 @@ else
   echo "--file_name pathcoverage.tsv" >> bash_script_5.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*pathcoverage.tsv" >> bash_script_5.sh
   
-  sbatch --partition=short \
-    --job-name=pathcoverage_merge \
-    --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/pathcoverage_merge.err \
-    --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/pathcoverage_merge.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=1 \
-    --mem-per-cpu=64000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script_5.sh | awk '{print $4}' >> job_ids.txt
+  #Create script for running and submitting individual scripts
+  echo '#!/bin/bash' > bash_script.sh
+  echo "#SBATCH --partition=short" >> bash_script.sh
+  echo "#SBATCH --job-name=Merge_tables" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.ErrorOut/Merge_tables_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/Merge_tables_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --time=12:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=1" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --array=1-5" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
+  echo "./bash_script_\${SLURM_ARRAY_TASK_ID}.sh" >> bash_script.sh
+  chmod +x bash_script.sh
   
-  #Hold script here until all jobs are completed
-  while :
-  do
-    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
-      sleep 1m
-      :
-    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
-      sleep 5m
-      :
-    else
-      break
-    fi
-  done
-  rm job_ids.txt
-  rm bash_script_*.sh
+  sbatch bash_script.sh
+  
+  rm bash_script*sh
   
   #Signal workflow has completed
   echo "Running of HUMAnN workflow complete"
