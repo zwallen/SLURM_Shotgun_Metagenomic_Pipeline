@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 26 May 2021                                  #
+# Last updated: 27 May 2021                                  #
 #                                                            #
 # Description: Initialize the directory that pipeline results#
 # will be placed into.                                       #
@@ -29,7 +29,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 25 May 2021                                  #"
+echo "# Last updated: 27 May 2021                                  #"
 echo "##############################################################"
 echo " "
 
