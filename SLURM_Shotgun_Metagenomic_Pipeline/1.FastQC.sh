@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 25 May 2021                                  #
+# Last updated: 27 May 2021                                  #
 #                                                            #
 # Description: Generate FastQC reports for each sequence     #
 # read file.                                                 #
@@ -41,7 +41,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 25 May 2021                                  #"
+echo "# Last updated: 27 May 2021                                  #"
 echo "##############################################################"
 echo " "
 
@@ -172,48 +172,31 @@ fi
   fi
   
   ##### Run FastQC #####
-  #Create shell script for running program
+  #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
+  echo "#SBATCH --partition=express" >> bash_script.sh
+  echo "#SBATCH --job-name=FastQC" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/0.FastQC_Initial_Reports/0.ErrorOut/FastQC_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/0.FastQC_Initial_Reports/0.Output/FastQC_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --time=2:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=1" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --array=1-$(ls -l ${SEQ_DIR}/*R1_001.${SEQ_EXT} | wc -l)" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
-  echo "fastqc \$1 \$2 -d ${RESULTS_DIR}/0.FastQC_Initial_Reports -o ${RESULTS_DIR}/0.FastQC_Initial_Reports \\" >> bash_script.sh
+  echo "FILE1=\$(ls ${SEQ_DIR}/*R1_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "FILE2=\$(ls ${SEQ_DIR}/*R2_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
+  echo "fastqc \$FILE1 \$FILE2 -d ${RESULTS_DIR}/0.FastQC_Initial_Reports -o ${RESULTS_DIR}/0.FastQC_Initial_Reports \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/0.FastQC_Initial_Reports/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
-  #For every sequence file submit job and grab job IDs
-  touch job_ids.txt
-  for file in ${SEQ_DIR}/*R1_001.${SEQ_EXT}; do
-    FILE_NAME=$(echo $file | awk -F '/' '{print $NF}' | awk -F '_R1_001' '{print $1}')
-    
-    sbatch --partition=short \
-    --job-name=${FILE_NAME} \
-    --error=${RESULTS_DIR}/0.FastQC_Initial_Reports/0.ErrorOut/${FILE_NAME}.err \
-    --output=${RESULTS_DIR}/0.FastQC_Initial_Reports/0.Output/${FILE_NAME}.out \
-    --time=12:00:00 \
-    --ntasks=1 \
-    --cpus-per-task=1 \
-    --mem-per-cpu=64000 \
-    --mail-type=FAIL \
-    --mail-user=${FAIL_EMAIL} \
-    ./bash_script.sh ${SEQ_DIR}/${FILE_NAME}_R1_001.${SEQ_EXT} ${SEQ_DIR}/${FILE_NAME}_R2_001.${SEQ_EXT} | \
-    awk '{print $4}' >> job_ids.txt
-  done
+  sbatch bash_script.sh
   
-  #Hold script here until all jobs are completed
-  while :
-  do
-    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
-      sleep 1m
-      :
-    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
-      sleep 5m
-      :
-    else
-      break
-    fi
-  done
   rm bash_script.sh
-  rm job_ids.txt
   
   #Signal jobs have ended
   echo "FastQC reports complete"
