@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 27 May 2021                                  #
+# Last updated: 28 May 2021                                  #
 #                                                            #
 # Description: This is a wrapper program that wraps various  #
 # programs to process raw paired-end whole genome shotgun    #
@@ -41,6 +41,7 @@ set -e
 # SLURM_Shotgun_Metagenomic_Pipeline.sh -i input_seqs_dir \  #
 #                    -o output_dir \                         #
 #                    -p 'commands; to; load; programs' \     #
+#                    -a path/to/adapters.fa \                #
 #                    -r path/to/host/ref/files/dir \         #
 #                    -c path/to/chocophlan/dir \             #
 #                    -u path/to/uniref/dir \                 #
@@ -84,7 +85,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 27 May 2021                                  #"
+echo "# Last updated: 28 May 2021                                  #"
 echo "##############################################################"
 echo " "
 
@@ -127,6 +128,7 @@ while getopts ":hi:o:p:a:r:c:u:m:f:s:" opt; do
     echo " SLURM_Shotgun_Metagenomic_Pipeline.sh -i input_seqs_dir \  "
     echo "                    -o output_dir \                         "
     echo "                    -p 'commands; to; load; programs' \     "
+    echo "                    -a path/to/adapters.fa \                "
     echo "                    -r path/to/host/ref/files/dir \         "
     echo "                    -c path/to/chocophlan/dir \             "
     echo "                    -u path/to/uniref/dir \                 "
