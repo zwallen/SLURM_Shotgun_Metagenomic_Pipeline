@@ -611,7 +611,7 @@ else
   echo "#SBATCH --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/Decontam_%A_%a.out" >> bash_script.sh
   echo "#SBATCH --time=12:00:00" >> bash_script.sh
   echo "#SBATCH --ntasks=1" >> bash_script.sh
-  echo "#SBATCH --cpus-per-task=5" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=2" >> bash_script.sh
   echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
@@ -626,7 +626,7 @@ else
   echo "--log ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_kneaddata.log \\" >> bash_script.sh
   echo "--reference-db $HOST_REF \\" >> bash_script.sh
   echo "--bypass-trim \\" >> bash_script.sh
-  echo "--threads 5 \\" >> bash_script.sh
+  echo "--threads 2 \\" >> bash_script.sh
   echo "--verbose \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
