@@ -27,13 +27,7 @@ SLURM_Shotgun_Metagenomic_Pipeline
 ## Important notes about the pipeline program
 
 ### Submission of internal sbatch jobs
-The `SLURM_Shotgun_Metagenomic_Pipeline.sh` script will internally submit a job for each pair of sequence files for each step of the pipeline. For each job step, a `bash_script.sh` and `job_ids.txt` file is created in the current directory that contains the code and the job IDs for the currently running step, and is deleted once the step completes. Default partitions and time-limits for these jobs have been chosen based on previous experience, but there is always a chance that jobs might take longer if sequence files being processed are larger than what the program was tested with. This pipeline was created and tested using 372 paired sequence files (744 total) derived from paired-end 150bp sequencing with a target of 40M total reads per sample (gzipped sequence file sizes ranged from 1.4-4.5G). If needing to modify the partitions and/or time-limits, one can simply pop open the pipeline script and modify where needed.
-
-### Job hang-ups
-While testing the pipeline it was noted that every now and then some jobs submitted by the `SLURM_Shotgun_Metagenomic_Pipeline.sh` script would fail, or get stalled. This seemed to be glitches with the scheduling system itself and not so much the wrapper program. Regardless, it is good practice to keep an eye on running jobs to make sure one is not running obsurdly long. The pipeline program is designed to hold at a step until all jobs are completed, so if a job seems to be stalled, it will have to be killed for the pipeline to move foward. If an individual job does fail suddenly or get stalled, my advice would be to quickly resubmit the failed, or stalled, job manually using the current pipeline step's `bash_script.sh` with the appropriate input and add the resulting job ID to the `job_ids.txt` file for the current step, so the pipeline script won't move on without finishing this job.
-
-### Pipeline steps beginning pre-maturely
-As mentioned above, the `SLURM_Shotgun_Metagenomic_Pipeline.sh` script is designed to hold at a step until all jobs submitted at that step are finished. The code loop that holds at a particular step was designed to hold even if errors occur with the holding loop, but periodically this loop still manages to fail (most likely due to hiccups with the scheduling system). Be sure to keep an eye on how the pipeline is proceeding to make sure one step is not bleeding into a previous one.
+The `SLURM_Shotgun_Metagenomic_Pipeline.sh` script will internally submit jobs for each step of the pipeline. For each job step, a `bash_script.sh` file is created in the current directory that contains the code for the currently running step, and is deleted once the step completes. Default partitions and time-limits for these jobs have been chosen based on previous experience, but there is always a chance that jobs might take longer if sequence files being processed are larger than what the program was tested with. This pipeline was created and tested using 372 paired sequence files (744 total) derived from paired-end 150bp sequencing with a target of 40M total reads per sample (gzipped sequence file sizes ranged from 1.4-4.5G). If needing to modify the partitions and/or time-limits, one can simply pop open the pipeline script and modify where needed.
 
 ### Required programs/databases and parameter descriptions
 For descriptions of required programs/databases and parameters for `SLURM_Shotgun_Metagenomic_Pipeline.sh` or `Create_Cladogram.sh` scripts, run the respective script with parameter `-h`.
@@ -47,7 +41,7 @@ The directory `SLURM_Shotgun_Metagenomic_Pipeline/` contains separate shell scri
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 25 May 2021                                  #
+# Last updated: 28 May 2021                                  #
 ##############################################################
  
  Description: This is a wrapper program that wraps various  
@@ -85,6 +79,7 @@ The directory `SLURM_Shotgun_Metagenomic_Pipeline/` contains separate shell scri
  SLURM_Shotgun_Metagenomic_Pipeline.sh -i input_seqs_dir \  
                     -o output_dir \                         
                     -p 'commands; to; load; programs' \     
+                    -a path/to/adapters.fa \                
                     -r path/to/host/ref/files/dir \         
                     -c path/to/chocophlan/dir \             
                     -u path/to/uniref/dir \                 
@@ -107,6 +102,8 @@ The directory `SLURM_Shotgun_Metagenomic_Pipeline/` contains separate shell scri
            needed to run pipeline steps (e.g. activating    
            conda environments, loading modules, adding to   
            PATH, etc.).                                     
+     -a    (Required) Path to adapters.fa file that comes   
+           packaged with BBMerge and BBDuk.                 
      -r    (Required) Path to directory of host genome      
            Bowtie2 indexed reference files (.bt2 files).    
      -c    (Required) Path to ChocoPhlAn database directory.
