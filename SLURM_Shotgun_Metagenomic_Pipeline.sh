@@ -635,6 +635,10 @@ else
   
   rm bash_script.sh
   
+  #Move extracted host sequences to their own directory
+  mkdir ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences
+  mv ${RESULTS_DIR}/3.Decontaminated_Sequences/*contam* ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences/
+  
   ##### Gzip output #####
   echo "Compressing KneadData output..."
   echo " "
@@ -642,9 +646,9 @@ else
   #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
   echo "#SBATCH --partition=short" >> bash_script.sh
-  echo "#SBATCH --job-name=Gzip" >> bash_script.sh
-  echo "#SBATCH --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Gzip_%A_%a.err" >> bash_script.sh
-  echo "#SBATCH --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/Gzip_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --job-name=Gzip1" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Gzip1_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/Gzip1_%A_%a.out" >> bash_script.sh
   echo "#SBATCH --time=12:00:00" >> bash_script.sh
   echo "#SBATCH --ntasks=1" >> bash_script.sh
   echo "#SBATCH --cpus-per-task=1" >> bash_script.sh
@@ -661,6 +665,28 @@ else
   
   rm bash_script.sh
   
+  #Create script for running program and submit
+  echo '#!/bin/bash' > bash_script.sh
+  echo "#SBATCH --partition=short" >> bash_script.sh
+  echo "#SBATCH --job-name=Gzip2" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Gzip2_%A_%a.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/Gzip2_%A_%a.out" >> bash_script.sh
+  echo "#SBATCH --time=12:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=1" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences/*.fastq | wc -l)" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
+  echo "FILE=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences/*.fastq | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "gzip \$FILE" >> bash_script.sh
+  chmod +x bash_script.sh
+  
+  sbatch bash_script.sh
+  
+  rm bash_script.sh
+  
   echo "Done"
   echo " "
   
@@ -668,10 +694,6 @@ else
   echo "Running of KneadData complete"
   echo "Elapsed time: $(($SECONDS / 3600)) hr : $(($(($SECONDS % 3600)) / 60)) min : $(($SECONDS % 60)) sec"
   echo " "
-  
-  #Move extracted host sequences to their own directory
-  mkdir ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences
-  mv ${RESULTS_DIR}/3.Decontaminated_Sequences/*contam*fastq.gz ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences/
 fi
 #################################################
 
