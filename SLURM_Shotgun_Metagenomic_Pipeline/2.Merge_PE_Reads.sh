@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 27 May 2021                                  #
+# Last updated: 28 May 2021                                  #
 #                                                            #
 # Description: Merge paired-end reads using BBMerge.         #
 #                                                            #
@@ -18,6 +18,7 @@ set -e
 # ./2.Merge_PE_Reads.sh -i input_seqs_dir \                  #
 #                       -o output_dir \                      #
 #                       -p 'commands; to; load; programs' \  #
+#                       -a path/to/adapters.fa \             #
 #                       -f notificationEmail@forFailures.edu #
 #                                                            #
 # Parameters:                                                #
@@ -32,6 +33,8 @@ set -e
 #           needed to run pipeline steps (e.g. activating    #
 #           conda environments, loading modules, adding to   #
 #           PATH, etc.).                                     #
+#     -a    (Required) Path to adapters.fa file that comes   #
+#           packaged with BBMerge and BBDuk.                 #
 #     -f    (Required) E-mail to send notifications to upon  #
 #           failure of any jobs.                             #
 ##############################################################
@@ -40,12 +43,12 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 27 May 2021                                  #"
+echo "# Last updated: 28 May 2021                                  #"
 echo "##############################################################"
 echo " "
 
 # Argument parsing
-while getopts ":hi:o:p:f:" opt; do
+while getopts ":hi:o:p:a:f:" opt; do
   case $opt in
     h)
     echo " Description: Merge paired-end reads using BBMerge.         "
@@ -60,6 +63,7 @@ while getopts ":hi:o:p:f:" opt; do
     echo " ./2.Merge_PE_Reads.sh -i input_seqs_dir \                  "
     echo "                       -o output_dir \                      "
     echo "                       -p 'commands; to; load; programs' \  "
+    echo "                       -a path/to/adapters.fa \             "
     echo "                       -f notificationEmail@forFailures.edu "
     echo "                                                            "
     echo " Parameters:                                                "
@@ -74,6 +78,8 @@ while getopts ":hi:o:p:f:" opt; do
     echo "           needed to run pipeline steps (e.g. activating    "
     echo "           conda environments, loading modules, adding to   "
     echo "           PATH, etc.).                                     "
+    echo "     -a    (Required) Path to adapters.fa file that comes   "
+    echo "           packaged with BBMerge and BBDuk.                 "
     echo "     -f    (Required) E-mail to send notifications to upon  "
     echo "           failure of any jobs.                             "
     echo " "
@@ -84,6 +90,8 @@ while getopts ":hi:o:p:f:" opt; do
     o) RESULTS_DIR=$(echo $OPTARG | sed 's#/$##')
     ;;
     p) PROG_LOAD="$OPTARG"
+    ;;
+    a) ADAPTERS="$OPTARG"
     ;;
     f) FAIL_EMAIL="$OPTARG"
     ;;
@@ -144,6 +152,20 @@ if [[ -z "$PROG_LOAD" ]]; then
   exit 1
 fi
 
+# -a
+if [[ -z "$ADAPTERS" ]]; then
+  echo "ERROR: Argument -a is required, please supply path to the adapters.fa file that comes with BBMerge and BBDuk"
+  exit 1
+fi
+if [[ -d "$ADAPTERS" ]]; then
+  echo "ERROR: Argument -a should be the path to a single file, not a directory, please supply path to the adapters.fa file that comes with BBMerge and BBDuk"
+  exit 1
+fi
+if echo $ADAPTERS | grep -q -v "adapters\.fa"; then
+  echo "ERROR: path given to -o does not contain the file name adapters.fa, please supply the adapters.fa file that comes with BBMerge and BBDuk to this argument"
+  exit 1
+fi
+
 # -f
 if [[ -z "$FAIL_EMAIL" ]]; then
   echo "ERROR: Argument -f is required, please supply an email that can be notified upon failure of any jobs ran during the pipeline"
@@ -178,7 +200,7 @@ fi
   echo "#SBATCH --output=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.Output/Merge_%A_%a.out" >> bash_script.sh
   echo "#SBATCH --time=12:00:00" >> bash_script.sh
   echo "#SBATCH --ntasks=1" >> bash_script.sh
-  echo "#SBATCH --cpus-per-task=5" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=2" >> bash_script.sh
   echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
@@ -191,7 +213,8 @@ fi
   echo "bbmerge.sh in1=\$FILE1 \\" >> bash_script.sh
   echo "in2=\$FILE2 \\" >> bash_script.sh
   echo "out=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.fastq.gz \\" >> bash_script.sh
-  echo "rem k=31 iterations=5 extend2=20 ecct t=5 -Xmx160g \\" >> bash_script.sh
+  echo "adapters=${ADAPTERS} \\" >> bash_script.sh
+  echo "rem k=31 iterations=5 extend2=20 ecct t=2 -Xmx64g \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
