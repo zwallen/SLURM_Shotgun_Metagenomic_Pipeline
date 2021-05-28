@@ -473,7 +473,7 @@ else
   echo "#SBATCH --output=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.Output/Merge_%A_%a.out" >> bash_script.sh
   echo "#SBATCH --time=12:00:00" >> bash_script.sh
   echo "#SBATCH --ntasks=1" >> bash_script.sh
-  echo "#SBATCH --cpus-per-task=5" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=2" >> bash_script.sh
   echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
@@ -487,7 +487,7 @@ else
   echo "in2=\$FILE2 \\" >> bash_script.sh
   echo "out=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.fastq.gz \\" >> bash_script.sh
   echo "adapters=${ADAPTERS} \\" >> bash_script.sh
-  echo "rem k=31 iterations=5 extend2=20 ecct t=5 -Xmx160g \\" >> bash_script.sh
+  echo "rem k=31 iterations=5 extend2=20 ecct t=2 -Xmx64g \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
