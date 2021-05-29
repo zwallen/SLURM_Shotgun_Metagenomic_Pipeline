@@ -635,57 +635,46 @@ else
   
   rm bash_script.sh
   
-  #Move extracted host sequences to their own directory
-  mkdir ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences
-  mv ${RESULTS_DIR}/3.Decontaminated_Sequences/*contam* ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences/
-  
   ##### Gzip output #####
   echo "Compressing KneadData output..."
   echo " "
   
-  #Create script for running program and submit
-  echo '#!/bin/bash' > bash_script.sh
-  echo "#SBATCH --partition=short" >> bash_script.sh
-  echo "#SBATCH --job-name=Gzip1" >> bash_script.sh
-  echo "#SBATCH --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Gzip1_%A_%a.err" >> bash_script.sh
-  echo "#SBATCH --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/Gzip1_%A_%a.out" >> bash_script.sh
-  echo "#SBATCH --time=12:00:00" >> bash_script.sh
-  echo "#SBATCH --ntasks=1" >> bash_script.sh
-  echo "#SBATCH --cpus-per-task=1" >> bash_script.sh
-  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
-  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
-  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
-  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq | wc -l)" >> bash_script.sh
-  echo "#SBATCH --wait" >> bash_script.sh
-  echo "FILE=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
-  echo "gzip \$FILE" >> bash_script.sh
-  chmod +x bash_script.sh
+  #Launch gzip for each file
+  touch job_ids.txt
+  for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq; do
+    sbatch --partition=short \
+           --job-name=Gzip \
+	   --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Gzip.err \
+	   --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Gzip.out \
+	   --time=12:00:00 \
+	   --ntasks=1 \
+	   --cpus-per-task=1 \
+	   --mem-per-cpu=16000 \
+	   --mail-type=FAIL \
+	   --mail-user=${FAIL_EMAIL} \
+	   --wrap="gzip $file" | \
+	   awk '{print $4}' >> job_ids.txt
+	   sleep 1
+  done
   
-  sbatch bash_script.sh
+  #Hold script here until all jobs are completed
+  while :
+  do
+    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
+      sleep 1m
+      :
+    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
+      sleep 5m
+      :
+    else
+      break
+    fi
+  done
+  rm job_ids.txt
   
-  rm bash_script.sh
-  
-  #Create script for running program and submit
-  echo '#!/bin/bash' > bash_script.sh
-  echo "#SBATCH --partition=short" >> bash_script.sh
-  echo "#SBATCH --job-name=Gzip2" >> bash_script.sh
-  echo "#SBATCH --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Gzip2_%A_%a.err" >> bash_script.sh
-  echo "#SBATCH --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/Gzip2_%A_%a.out" >> bash_script.sh
-  echo "#SBATCH --time=12:00:00" >> bash_script.sh
-  echo "#SBATCH --ntasks=1" >> bash_script.sh
-  echo "#SBATCH --cpus-per-task=1" >> bash_script.sh
-  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
-  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
-  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
-  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences/*.fastq | wc -l)" >> bash_script.sh
-  echo "#SBATCH --wait" >> bash_script.sh
-  echo "FILE=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences/*.fastq | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
-  echo "gzip \$FILE" >> bash_script.sh
-  chmod +x bash_script.sh
-  
-  sbatch bash_script.sh
-  
-  rm bash_script.sh
+  #Move extracted host sequences to their own directory
+  mkdir ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences
+  mv ${RESULTS_DIR}/3.Decontaminated_Sequences/*contam* ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences/
   
   echo "Done"
   echo " "
