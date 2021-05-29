@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 27 May 2021                                  #
+# Last updated: 29 May 2021                                  #
 #                                                            #
 # Description: Perform taxonomic and functional profiling    #
 # using HUMAnN/MetaPhlAn workflow.                           #
@@ -55,7 +55,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 27 May 2021                                  #"
+echo "# Last updated: 29 May 2021                                  #"
 echo "##############################################################"
 echo " "
 
@@ -215,7 +215,7 @@ fi
   echo "#SBATCH --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/Profiling_%A_%a.out" >> bash_script.sh
   echo "#SBATCH --time=50:00:00" >> bash_script.sh
   echo "#SBATCH --ntasks=1" >> bash_script.sh
-  echo "#SBATCH --cpus-per-task=5" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=4" >> bash_script.sh
   echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
@@ -231,7 +231,7 @@ fi
   echo "--nucleotide-database $CHOCO \\" >> bash_script.sh
   echo "--protein-database $UNIREF \\" >> bash_script.sh
   echo "--prescreen-threshold 0.001 \\" >> bash_script.sh
-  echo "--threads 5 \\" >> bash_script.sh
+  echo "--threads 4 \\" >> bash_script.sh
   echo "--verbose \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
