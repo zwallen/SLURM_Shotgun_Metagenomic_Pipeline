@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 2 June 2021                                  #
+# Last updated: 3 June 2021                                  #
 #                                                            #
 # Description: This is a wrapper program that wraps various  #
 # programs to process raw paired-end whole genome shotgun    #
@@ -41,11 +41,10 @@ set -e
 # SLURM_Shotgun_Metagenomic_Pipeline.sh -i input_seqs_dir \  #
 #                    -o output_dir \                         #
 #                    -p 'commands; to; load; programs' \     #
-#                    -a path/to/adapters.fa \                #
 #                    -r path/to/host/ref/files/dir \         #
 #                    -c path/to/chocophlan/dir \             #
 #                    -u path/to/uniref/dir \                 #
-#                    -m path/to/clade/marker/info/file \     #
+#                    -t path/to/clade/marker/info/file \     #
 #                    -f notificationEmail@forFailures.edu \  #
 #                    [additional options]                    #
 #                                                            #
@@ -64,33 +63,35 @@ set -e
 #           needed to run pipeline steps (e.g. activating    #
 #           conda environments, loading modules, adding to   #
 #           PATH, etc.).                                     #
-#     -a    (Required) Path to adapters.fa file that comes   #
-#           packaged with BBMerge and BBDuk.                 #
 #     -r    (Required) Path to directory of host genome      #
 #           Bowtie2 indexed reference files (.bt2 files).    #
 #     -c    (Required) Path to ChocoPhlAn database directory.#
 #     -u    (Required) Path to UniRef90 database directory.  #
-#     -m    (Required) Path to clade marker info file        #
+#     -t    (Required) Path to clade marker info file        #
 #           mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2    #
 #     -f    (Required) E-mail to send notifications to upon  #
 #           failure of any jobs.                             #
+#     -m    (Optional) Merge paired-end reads before         #
+#           performing the pipeline using BBMerge.           #
+#     -a    (Optional) Path to adapters.fa file that comes   #
+#           packaged with BBMerge and BBDuk. Required when   #
+#           merging reads.                                   #
 #     -s    (Optional) Skip certain steps in the pipeline if #
 #           need be. Provide a comma separated list of steps #
 #           that you wish to skip in the pipeline. List may  #
-#           have the values: fastqc, bbmerge, bbduk,         #
-#           kneaddata, humann.                               #
+#           have the values: fastqc, bbduk, kneaddata, humann#
 ##############################################################
 
 echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 2 June 2021                                  #"
+echo "# Last updated: 3 June 2021                                  #"
 echo "##############################################################"
 echo " "
 
 # Argument parsing
-while getopts ":hi:o:p:a:r:c:u:m:f:s:" opt; do
+while getopts ":hi:o:p:r:c:u:t:f:ma:s:" opt; do
   case $opt in
     h)
     echo " Description: This is a wrapper program that wraps various  "
@@ -128,11 +129,10 @@ while getopts ":hi:o:p:a:r:c:u:m:f:s:" opt; do
     echo " SLURM_Shotgun_Metagenomic_Pipeline.sh -i input_seqs_dir \  "
     echo "                    -o output_dir \                         "
     echo "                    -p 'commands; to; load; programs' \     "
-    echo "                    -a path/to/adapters.fa \                "
     echo "                    -r path/to/host/ref/files/dir \         "
     echo "                    -c path/to/chocophlan/dir \             "
     echo "                    -u path/to/uniref/dir \                 "
-    echo "                    -m path/to/clade/marker/info/file \     "
+    echo "                    -t path/to/clade/marker/info/file \     "
     echo "                    -f notificationEmail@forFailures.edu \  "
     echo "                    [additional options]                    "
     echo "                                                            "
@@ -151,21 +151,23 @@ while getopts ":hi:o:p:a:r:c:u:m:f:s:" opt; do
     echo "           needed to run pipeline steps (e.g. activating    "
     echo "           conda environments, loading modules, adding to   "
     echo "           PATH, etc.).                                     "
-    echo "     -a    (Required) Path to adapters.fa file that comes   "
-    echo "           packaged with BBMerge and BBDuk.                 "
     echo "     -r    (Required) Path to directory of host genome      "
     echo "           Bowtie2 indexed reference files (.bt2 files).    "
     echo "     -c    (Required) Path to ChocoPhlAn database directory."
     echo "     -u    (Required) Path to UniRef90 database directory.  "
-    echo "     -m    (Required) Path to clade marker info file        "
+    echo "     -t    (Required) Path to clade marker info file        "
     echo "           mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2    "
     echo "     -f    (Required) E-mail to send notifications to upon  "
     echo "           failure of any jobs.                             "
+    echo "     -m    (Optional) Merge paired-end reads before         "
+    echo "           performing the pipeline using BBMerge.           "
+    echo "     -a    (Optional) Path to adapters.fa file that comes   "
+    echo "           packaged with BBMerge and BBDuk. Required when   "
+    echo "           merging reads.                                   "
     echo "     -s    (Optional) Skip certain steps in the pipeline if "
     echo "           need be. Provide a comma separated list of steps "
     echo "           that you wish to skip in the pipeline. List may  "
-    echo "           have the values: fastqc, bbmerge, bbduk,         "
-    echo "           kneaddata, humann.                               "
+    echo "           have the values: fastqc, bbduk, kneaddata, humann"
     echo " "
     exit 0
     ;;
@@ -175,17 +177,19 @@ while getopts ":hi:o:p:a:r:c:u:m:f:s:" opt; do
     ;;
     p) PROG_LOAD="$OPTARG"
     ;;
-    a) ADAPTERS="$OPTARG"
-    ;;
     r) HOST_REF=$(echo $OPTARG | sed 's#/$##')
     ;;
     c) CHOCO=$(echo $OPTARG | sed 's#/$##')
     ;;
     u) UNIREF=$(echo $OPTARG | sed 's#/$##')
     ;;
-    m) MARKERS="$OPTARG"
+    t) MARKERS="$OPTARG"
     ;;
     f) FAIL_EMAIL="$OPTARG"
+    ;;
+    m) MERGE=1
+    ;;
+    a) ADAPTERS="$OPTARG"
     ;;
     s) SKIP="$OPTARG"
     ;;
@@ -246,20 +250,6 @@ if [[ -z "$PROG_LOAD" ]]; then
   exit 1
 fi
 
-# -a
-if [[ -z "$ADAPTERS" ]]; then
-  echo "ERROR: Argument -a is required, please supply path to the adapters.fa file that comes with BBMerge and BBDuk"
-  exit 1
-fi
-if [[ -d "$ADAPTERS" ]]; then
-  echo "ERROR: Argument -a should be the path to a single file, not a directory, please supply path to the adapters.fa file that comes with BBMerge and BBDuk"
-  exit 1
-fi
-if echo $ADAPTERS | grep -q -v "adapters\.fa"; then
-  echo "ERROR: path given to -o does not contain the file name adapters.fa, please supply the adapters.fa file that comes with BBMerge and BBDuk to this argument"
-  exit 1
-fi
-
 # -r
 if [[ -z "$HOST_REF" ]]; then
   echo "ERROR: Argument -r is required, please supply a directory with host genome Bowtie2 indexed reference sequences"
@@ -296,17 +286,17 @@ if [[ ! -d "$UNIREF" ]]; then
   exit 1
 fi
 
-# -m
+# -t
 if [[ -z "$MARKERS" ]]; then
-  echo "ERROR: Argument -m is required, please supply path to the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2"
+  echo "ERROR: Argument -t is required, please supply path to the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2"
   exit 1
 fi
 if [[ -d "$MARKERS" ]]; then
-  echo "ERROR: Argument -m should be the path to a single file, not a directory, please supply path to the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2"
+  echo "ERROR: Argument -t should be the path to a single file, not a directory, please supply path to the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2"
   exit 1
 fi
 if echo $MARKERS | grep -q -v "mpa_v30_CHOCOPhlAn_201901_marker_info\.txt\.bz2"; then
-  echo "ERROR: path given to -m does not contain the file name mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2, please supply the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2 to this argument"
+  echo "ERROR: path given to -t does not contain the file name mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2, please supply the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2 to this argument"
   exit 1
 fi
 
@@ -318,11 +308,33 @@ elif echo $FAIL_EMAIL | grep -q -v '@'; then
   echo "ERROR: Argument -f requires a valid email, please give an email in the form of xxxx@xxxx.xxx"
 fi
 
+# -m
+if [[ ! -z "$MERGE" ]]; then
+  if [[ -z "$ADAPTERS" ]]; then
+    echo "ERROR: when specifying the -m parameter, the -a parameter must also be specified"
+    exit 1
+  fi
+fi
+
+# -a
+if [[ ! -z "$ADAPTERS" ]]; then
+  if [[ -z "$MERGE" ]]; then
+    echo "ERROR: when specifying the -a parameter, the -m parameter must also be specified"
+    exit 1
+  fi
+  if [[ -d "$ADAPTERS" ]]; then
+    echo "ERROR: Argument -a should be the path to a single file, not a directory, please supply path to the adapters.fa file that comes with BBMerge and BBDuk"
+    exit 1
+  fi
+  if echo $ADAPTERS | grep -q -v "adapters\.fa"; then
+    echo "ERROR: path given to -o does not contain the file name adapters.fa, please supply the adapters.fa file that comes with BBMerge and BBDuk to this argument"
+    exit 1
+  fi
+fi
+
 # -s
 if [[ ! -z "$SKIP" ]]; then
   if echo $SKIP | grep -q "fastqc"; then
-    :
-  elif echo $SKIP | grep -q "bbmerge"; then
     :
   elif echo $SKIP | grep -q "bbduk"; then
     :
@@ -331,7 +343,7 @@ if [[ ! -z "$SKIP" ]]; then
   elif echo $SKIP | grep -q "humann"; then
     :
   else
-    echo "ERROR: Invalid argument given to -s, please specify one or more of: fastqc,bbmerge,bbduk,kneaddata,humann"
+    echo "ERROR: Invalid argument given to -s, please specify one or more of: fastqc,bbduk,kneaddata,humann"
     exit 1
   fi
 fi
@@ -436,9 +448,10 @@ fi
 #################################################
 
 ######### MERGE PAIRED READS WITH BBMERGE #######
-if echo $SKIP | grep -q "bbmerge"; then
+if [[ -z "$MERGE" ]]; then
   echo " "
   echo "*** Skipping running of BBMerge for paired read merging ***"
+  echo "*** Making empty directory to keep numbering consistent ***"
   echo " "
   
   #Create directory
@@ -548,15 +561,28 @@ else
   echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
-  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
   echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE=\$(ls ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
-  echo "bbduk.sh in=\$FILE \\" >> bash_script.sh
-  echo "out=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}.fastq.gz \\" >> bash_script.sh
-  echo "stats=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}_stats.txt \\" >> bash_script.sh
-  echo "ftm=5 qtrim=rl trimq=25 minlen=50 ref=adapters,phix -Xmx32g \\" >> bash_script.sh
+  if [[ ! -z "$MERGE" ]]; then
+    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
+    echo "FILE=\$(ls ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+    echo "bbduk.sh in=\$FILE \\" >> bash_script.sh
+    echo "out=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}.fastq.gz \\" >> bash_script.sh
+    echo "stats=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}_stats.txt \\" >> bash_script.sh
+    echo "ftm=5 qtrim=rl trimq=25 minlen=50 ref=adapters,phix -Xmx32g \\" >> bash_script.sh
+  else
+    echo "#SBATCH --array=1-$(ls -l ${SEQ_DIR}/*R1_001.${SEQ_EXT} | wc -l)" >> bash_script.sh
+    echo "FILE1=\$(ls ${SEQ_DIR}/*R1_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE2=\$(ls ${SEQ_DIR}/*R2_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
+    echo "bbduk.sh in=\$FILE1 \\" >> bash_script.sh
+    echo "in2=\$FILE2 \\" >> bash_script.sh
+    echo "out=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE1} \\" >> bash_script.sh
+    echo "out2=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE2} \\" >> bash_script.sh
+    echo "stats=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}_stats.txt \\" >> bash_script.sh
+    echo "ftm=5 tpe tbo qtrim=rl trimq=25 minlen=50 ref=adapters,phix -Xmx32g \\" >> bash_script.sh
+  fi
   echo "> ${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
@@ -615,12 +641,21 @@ else
   echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
-  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
   echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
-  echo "kneaddata --input \$FILE \\" >> bash_script.sh
+  if [[ ! -z "$MERGE" ]]; then
+    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
+    echo "FILE=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+    echo "kneaddata --input \$FILE \\" >> bash_script.sh
+  else
+    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R1_001.${SEQ_EXT} | wc -l)" >> bash_script.sh
+    echo "FILE1=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R1_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE2=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R2_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
+    echo "kneaddata --input \$FILE1 \\" >> bash_script.sh
+    echo "--input \$FILE2 \\" >> bash_script.sh
+  fi
   echo "--output ${RESULTS_DIR}/3.Decontaminated_Sequences \\" >> bash_script.sh
   echo "--output-prefix \$FILE_NAME \\" >> bash_script.sh
   echo "--log ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_kneaddata.log \\" >> bash_script.sh
@@ -634,6 +669,10 @@ else
   sbatch bash_script.sh
   
   rm bash_script.sh
+  
+  if [[ -z "$MERGE" ]]; then
+    rm ${RESULTS_DIR}/3.Decontaminated_Sequences/*unmatched*fastq
+  fi
   
   ##### Gzip output #####
   echo "Compressing KneadData output..."
@@ -720,11 +759,20 @@ else
   echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
-  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
   echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+  if [[ ! -z "$MERGE" ]]; then
+    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
+    echo "FILE=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+  else
+    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_1.fastq.gz | wc -l)" >> bash_script.sh
+    echo "FILE1=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_1.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE2=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_2.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_paired_1' '{print \$1}')" >> bash_script.sh
+    echo "zcat \$FILE1 \$FILE2 > ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
+    echo "FILE=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
+  fi
   echo "humann --input \$FILE \\" >> bash_script.sh
   echo "--output ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling \\" >> bash_script.sh
   echo "--output-basename \$FILE_NAME \\" >> bash_script.sh
