@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 28 May 2021                                  #
+# Last updated: 3 June 2021                                  #
 #                                                            #
 # Description: Merge paired-end reads using BBMerge.         #
 #                                                            #
@@ -15,7 +15,9 @@ set -e
 #    BBMerge:    For merging paired-end reads.               #
 #                                                            #
 # Usage:                                                     #
-# ./2.Merge_PE_Reads.sh -i input_seqs_dir \                  #
+# ./2.Merge_PE_Reads.sh -s                                   #
+#                       OR                                   #
+#                       -i input_seqs_dir \                  #
 #                       -o output_dir \                      #
 #                       -p 'commands; to; load; programs' \  #
 #                       -a path/to/adapters.fa \             #
@@ -23,6 +25,9 @@ set -e
 #                                                            #
 # Parameters:                                                #
 #     -h    Print the parameter list below then exit.        #
+#     -s    (Required) Skip merging of paired-end reads, just#
+#           make empty directory to keep numbering consistent#
+#   OR                                                       #
 #     -i    (Required) Directory that contains the raw       #
 #           fastq files to be processed. Sequences must have #
 #           file extensions .fastq OR .fq,                   #
@@ -43,12 +48,12 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 28 May 2021                                  #"
+echo "# Last updated: 3 June 2021                                  #"
 echo "##############################################################"
 echo " "
 
 # Argument parsing
-while getopts ":hi:o:p:a:f:" opt; do
+while getopts ":hsi:o:p:a:f:" opt; do
   case $opt in
     h)
     echo " Description: Merge paired-end reads using BBMerge.         "
@@ -60,7 +65,9 @@ while getopts ":hi:o:p:a:f:" opt; do
     echo "    BBMerge:    For merging paired-end reads.               "
     echo "                                                            "
     echo " Usage:                                                     "
-    echo " ./2.Merge_PE_Reads.sh -i input_seqs_dir \                  "
+    echo " ./2.Merge_PE_Reads.sh -s                                   "
+    echo "                       OR                                   "
+    echo "                       -i input_seqs_dir \                  "
     echo "                       -o output_dir \                      "
     echo "                       -p 'commands; to; load; programs' \  "
     echo "                       -a path/to/adapters.fa \             "
@@ -68,6 +75,9 @@ while getopts ":hi:o:p:a:f:" opt; do
     echo "                                                            "
     echo " Parameters:                                                "
     echo "     -h    Print the parameter list below then exit.        "
+    echo "     -s    (Required) Skip merging of paired-end reads, just"
+    echo "           make empty directory to keep numbering consistent"
+    echo "   OR                                                       "
     echo "     -i    (Required) Directory that contains the raw       "
     echo "           fastq files to be processed. Sequences must have "
     echo "           file extensions .fastq OR .fq,                   "
@@ -84,6 +94,8 @@ while getopts ":hi:o:p:a:f:" opt; do
     echo "           failure of any jobs.                             "
     echo " "
     exit 0
+    ;;
+    s) SKIP=1
     ;;
     i) SEQ_DIR=$(echo $OPTARG | sed 's#/$##')
     ;;
@@ -103,6 +115,24 @@ while getopts ":hi:o:p:a:f:" opt; do
     ;;
   esac
 done
+
+if [[ ! -z "$SKIP" ]]; then
+  echo " "
+  echo "*** Skipping running of BBMerge for paired read merging ***"
+  echo "*** Making empty directory to keep numbering consistent ***"
+  echo " "
+  
+  #Create directory
+  if [ -d "${RESULTS_DIR}/1.Merged_Paired_End_Sequences" ]
+  then
+	  :
+  else
+	  mkdir ${RESULTS_DIR}/1.Merged_Paired_End_Sequences
+	  mkdir ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.ErrorOut
+	  mkdir ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/0.Output
+  fi
+  exit 0
+fi
 
 # Check that valid arguments were entered
 
