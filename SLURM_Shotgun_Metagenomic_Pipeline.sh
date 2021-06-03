@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 29 May 2021                                  #
+# Last updated: 2 June 2021                                  #
 #                                                            #
 # Description: This is a wrapper program that wraps various  #
 # programs to process raw paired-end whole genome shotgun    #
@@ -85,7 +85,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 29 May 2021                                  #"
+echo "# Last updated: 2 June 2021                                  #"
 echo "##############################################################"
 echo " "
 
@@ -754,10 +754,10 @@ else
   echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
-  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*humann_temp | wc -l)" >> bash_script.sh
+  echo "#SBATCH --array=1-$(ls -d -l ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*humann_temp | wc -l)" >> bash_script.sh
   echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "DIR=\$(ls ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*humann_temp | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+  echo "DIR=\$(ls -d ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*humann_temp | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
   echo "FILE_NAME=\$(echo \$DIR | awk -F '/' '{print \$NF}' | awk -F '_humann_temp' '{print \$1}')" >> bash_script.sh
   echo "metaphlan --input_type bowtie2out \\" >> bash_script.sh
   echo "--add_viruses \\" >> bash_script.sh
@@ -821,6 +821,7 @@ else
   echo "> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/metaphlan_rel_abun_table.tsv" >> bash_script_1.sh
   echo "sed -i '2s/_metaphlan_rel_abun_table//g' ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/metaphlan_rel_abun_table.tsv" >> bash_script_1.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*metaphlan_rel_abun_table.tsv" >> bash_script_1.sh
+  chmod +x bash_script_1.sh
   
   echo '#!/bin/bash' > bash_script_2.sh
   echo "$PROG_LOAD" >> bash_script_2.sh
@@ -828,13 +829,15 @@ else
   echo "> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/metaphlan_norm_abun_table.tsv" >> bash_script_2.sh
   echo "sed -i '2s/_metaphlan_norm_abun_table//g' ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/metaphlan_norm_abun_table.tsv" >> bash_script_2.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*metaphlan_norm_abun_table.tsv" >> bash_script_2.sh
-    
+  chmod +x bash_script_2.sh
+  
   echo '#!/bin/bash' > bash_script_3.sh
   echo "$PROG_LOAD" >> bash_script_3.sh
   echo "humann_join_tables --input ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/ \\" >> bash_script_3.sh
   echo "--output ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/humann_genefamilies.tsv \\" >> bash_script_3.sh
   echo "--file_name genefamilies.tsv" >> bash_script_3.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*genefamilies.tsv" >> bash_script_3.sh
+  chmod +x bash_script_3.sh
   
   echo '#!/bin/bash' > bash_script_4.sh
   echo "$PROG_LOAD" >> bash_script_4.sh
@@ -842,6 +845,7 @@ else
   echo "--output ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/humann_pathabundance.tsv \\" >> bash_script_4.sh
   echo "--file_name pathabundance.tsv" >> bash_script_4.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*pathabundance.tsv" >> bash_script_4.sh
+  chmod +x bash_script_4.sh
 
   echo '#!/bin/bash' > bash_script_5.sh
   echo "$PROG_LOAD" >> bash_script_5.sh
@@ -849,6 +853,7 @@ else
   echo "--output ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/humann_pathcoverage.tsv \\" >> bash_script_5.sh
   echo "--file_name pathcoverage.tsv" >> bash_script_5.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*pathcoverage.tsv" >> bash_script_5.sh
+  chmod +x bash_script_5.sh
   
   #Create script for running and submitting individual scripts
   echo '#!/bin/bash' > bash_script.sh
