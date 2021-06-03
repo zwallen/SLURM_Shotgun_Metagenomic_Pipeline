@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 29 May 2021                                  #
+# Last updated: 3 June 2021                                  #
 #                                                            #
 # Description: Remove host sequence reads using KneadData.   #
 #                                                            #
@@ -17,13 +17,16 @@ set -e
 #                map reads against.                          #
 #                                                            #
 # Usage:                                                     #
-# ./4.Remove_Host_Reads.sh -o output_dir \                   #
+# ./4.Remove_Host_Reads.sh [-m] \                            #
+#                        -o output_dir \                     #
 #                        -p 'commands; to; load; programs' \ #
 #                        -r path/to/host/ref/files/dir \     #
 #                        -f notificationEmail@forFailures.edu#
 #                                                            #
 # Parameters:                                                #
 #     -h    Print the parameter list below then exit.        #
+#     -m    (Required) Are input fastq files merged? Add this#
+#           parameter if so. Will cause error otherwise.     #
 #     -o    (Required) Path to pipeline result directory.    #
 #     -p    (Required) Single quoted string that contains    #
 #           commands to load all the necessary programs      #
@@ -40,12 +43,12 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 29 May 2021                                  #"
+echo "# Last updated: 3 June 2021                                  #"
 echo "##############################################################"
 echo " "
 
 # Argument parsing
-while getopts ":ho:p:r:f:" opt; do
+while getopts ":hmo:p:r:f:" opt; do
   case $opt in
     h)
     echo " Description: Merge paired-end reads using BBMerge.         "
@@ -59,13 +62,16 @@ while getopts ":ho:p:r:f:" opt; do
     echo "                map reads against.                          "
     echo "                                                            "
     echo " Usage:                                                     "
-    echo " ./4.Remove_Host_Reads.sh -o output_dir \                   "
+    echo " ./4.Remove_Host_Reads.sh [-m] \                            "
+    echo "                        -o output_dir \                     "
     echo "                        -p 'commands; to; load; programs' \ "
     echo "                        -r path/to/host/ref/files/dir \     "
     echo "                        -f notificationEmail@forFailures.edu"
     echo "                                                            "
     echo " Parameters:                                                "
     echo "     -h    Print the parameter list below then exit.        "
+    echo "     -m    (Required) Are input fastq files merged? Add this"
+    echo "           parameter if so. Will cause error otherwise.     "
     echo "     -o    (Required) Path to pipeline result directory.    "
     echo "     -p    (Required) Single quoted string that contains    "
     echo "           commands to load all the necessary programs      "
@@ -78,6 +84,8 @@ while getopts ":ho:p:r:f:" opt; do
     echo "           failure of any jobs.                             "
     echo " "
     exit 0
+    ;;
+    m) MERGE=1
     ;;
     o) RESULTS_DIR=$(echo $OPTARG | sed 's#/$##')
     ;;
@@ -168,12 +176,21 @@ fi
   echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
-  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
   echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
-  echo "kneaddata --input \$FILE \\" >> bash_script.sh
+  if [[ ! -z "$MERGE" ]]; then
+    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
+    echo "FILE=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+    echo "kneaddata --input \$FILE \\" >> bash_script.sh
+  else
+    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R1_001.${SEQ_EXT} | wc -l)" >> bash_script.sh
+    echo "FILE1=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R1_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE2=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R2_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
+    echo "kneaddata --input \$FILE1 \\" >> bash_script.sh
+    echo "--input \$FILE2 \\" >> bash_script.sh
+  fi
   echo "--output ${RESULTS_DIR}/3.Decontaminated_Sequences \\" >> bash_script.sh
   echo "--output-prefix \$FILE_NAME \\" >> bash_script.sh
   echo "--log ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_kneaddata.log \\" >> bash_script.sh
@@ -187,6 +204,10 @@ fi
   sbatch bash_script.sh
   
   rm bash_script.sh
+  
+  if [[ -z "$MERGE" ]]; then
+    rm ${RESULTS_DIR}/3.Decontaminated_Sequences/*unmatched*fastq
+  fi
   
   ##### Gzip output #####
   echo "Compressing KneadData output..."
