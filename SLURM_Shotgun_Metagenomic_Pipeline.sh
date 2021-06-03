@@ -581,8 +581,8 @@ else
     echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
     echo "bbduk.sh in=\$FILE1 \\" >> bash_script.sh
     echo "in2=\$FILE2 \\" >> bash_script.sh
-    echo "out=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE1} \\" >> bash_script.sh
-    echo "out2=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE2} \\" >> bash_script.sh
+    echo "out=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}_R1_001.fastq.gz \\" >> bash_script.sh
+    echo "out2=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}_R2_001.fastq.gz \\" >> bash_script.sh
     echo "stats=${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}_stats.txt \\" >> bash_script.sh
     echo "ftm=5 tpe tbo qtrim=rl trimq=25 minlen=50 ref=adapters,phix -Xmx32g \\" >> bash_script.sh
   fi
@@ -656,8 +656,8 @@ else
     echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
     echo "kneaddata --input \$FILE \\" >> bash_script.sh
   else
-    echo "FILE1=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R1_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
-    echo "FILE2=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R2_001.${SEQ_EXT} | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE1=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R1_001.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE2=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R2_001.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
     echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
     echo "kneaddata --input \$FILE1 \\" >> bash_script.sh
     echo "--input \$FILE2 \\" >> bash_script.sh
