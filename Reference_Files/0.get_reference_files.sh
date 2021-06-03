@@ -18,8 +18,5 @@ wget "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_
 tar -xvzf GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set.fna.bowtie_index.tar.gz
 rm GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set.fna.bowtie_index.tar.gz
 
-wget "https://www.arb-silva.de/fileadmin/silva_databases/release_132/Exports/SILVA_132_SSURef_Nr99_tax_silva.fasta.gz"
-gunzip SILVA_132_SSURef_Nr99_tax_silva.fasta.gz
-
-echo "Reference databases and files for running SLURM_Shotgun_Metagenomic_Pipeline.sh have been downloaded, would recommend also running script 0.prep_SILVA_132_SSURef_Nr99_tax_silva.sh if wanting to do 16S based taxonomic classification option to prep SILVA reference FASTA for use with RDP classifier"
+echo " *** Reference databases for running SLURM_Shotgun_Metagenomic_Pipeline.sh have been downloaded ***"
 
