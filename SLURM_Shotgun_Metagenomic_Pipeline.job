@@ -7,28 +7,33 @@
 #SBATCH --ntasks=1
 #SBATCH --time=150:00:00
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=8000
+#SBATCH --mem-per-cpu=16000
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=user@institution.edu
 
-#Load R module (needed for some functions within pipeline script)
+#Enable conda command and load environment that has HUMAnN/MetaPhlAn programs
+#(needed for some functions within pipeline script)
+source /home/${USER}/miniconda3/etc/profile.d/conda.sh
+conda activate metagenomics
+
+#Load R module 
+#(needed for some functions within pipeline script)
 module load R
 
 #Provide location for directory containing sequences, and directory to place pipeline output
 SEQ_DIR=
 OUT_DIR=
 
+#Provide location of pipeline directory
+PIPELINE_DIR=
+
 #Launch pipeline script
-./SLURM_Shotgun_Metagenomic_Pipeline.sh \
+${PIPELINE_DIR}/SLURM_Shotgun_Metagenomic_Pipeline.sh \
 -i ${SEQ_DIR} \
 -o ${OUT_DIR} \
--p 'module load FastQC; module load R; PATH=$PATH:/home/user/bbmap; source /home/user/miniconda3/etc/profile.d/conda.sh; conda activate metagenomics' \
--r Reference_Files/GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set \
--c Reference_Files/full_chocophlan.v296_201901 \
--u Reference_Files/uniref90_annotated_v201901 \
--m Reference_Files/mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2 \
--f user@institution.edu \
--a \
--e Reference_Files/SILVA_132_SSURef_Nr99_tax_silva.fasta \
--t Reference_Files/SILVA_132_SSURef_Nr99_tax_silva.fasta \
--l Support_Files/rdp_classifier_2.13
+-p "module load FastQC; module load R; PATH=$PATH:/home/${USER}/bbmap; source /home/user/miniconda3/etc/profile.d/conda.sh; conda activate metagenomics" \
+-r ${PIPELINE_DIR}/Reference_Files/GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set \
+-c ${PIPELINE_DIR}/Reference_Files/full_chocophlan.v296_201901 \
+-u ${PIPELINE_DIR}/Reference_Files/uniref90_annotated_v201901 \
+-t ${PIPELINE_DIR}/Reference_Files/mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2 \
+-f user@institution.edu
