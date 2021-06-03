@@ -4,7 +4,7 @@ set -e
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 2 June 2021                                  #
+# Last updated: 3 June 2021                                  #
 #                                                            #
 # Description: Perform taxonomic and functional profiling    #
 # using HUMAnN/MetaPhlAn workflow.                           #
@@ -28,15 +28,18 @@ set -e
 #                normalized abundance tables from MetaPhlAn. #
 #                                                            #
 # Usage:                                                     #
-# ./5.Taxonomic_Functional_Profiling.sh -o output_dir \      #
+# ./5.Taxonomic_Functional_Profiling.sh [-m] \               #
+#                        -o output_dir \                     #
 #                        -p 'commands; to; load; programs' \ #
 #                        -c path/to/chocophlan/dir \         #
 #                        -u path/to/uniref/dir \             #
-#                        -m path/to/clade/marker/info/file \ #
+#                        -t path/to/clade/marker/info/file \ #
 #                        -f notificationEmail@forFailures.edu#
 #                                                            #
 # Parameters:                                                #
 #     -h    Print the parameter list below then exit.        #
+#     -m    (Required) Are input fastq files merged? Add this#
+#           parameter if so. Will cause error otherwise.     #
 #     -o    (Required) Path to pipeline result directory.    #
 #     -p    (Required) Single quoted string that contains    #
 #           commands to load all the necessary programs      #
@@ -45,7 +48,7 @@ set -e
 #           PATH, etc.).                                     #
 #     -c    (Required) Path to ChocoPhlAn database directory.#
 #     -u    (Required) Path to UniRef90 database directory.  #
-#     -m    (Required) Path to clade marker info file        #
+#     -t    (Required) Path to clade marker info file        #
 #           mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2    #
 #     -f    (Required) E-mail to send notifications to upon  #
 #           failure of any jobs.                             #
@@ -55,12 +58,12 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 2 June 2021                                  #"
+echo "# Last updated: 3 June 2021                                  #"
 echo "##############################################################"
 echo " "
 
 # Argument parsing
-while getopts ":ho:p:c:u:m:f:" opt; do
+while getopts ":hmo:p:c:u:t:f:" opt; do
   case $opt in
     h)
     echo " Description: Merge paired-end reads using BBMerge.         "
@@ -84,15 +87,18 @@ while getopts ":ho:p:c:u:m:f:" opt; do
     echo "                normalized abundance tables from MetaPhlAn. "
     echo "                                                            "
     echo " Usage:                                                     "
-    echo " ./5.Taxonomic_Functional_Profiling.sh -o output_dir \      "
+    echo " ./5.Taxonomic_Functional_Profiling.sh [-m] \               "
+    echo "                        -o output_dir \                     "
     echo "                        -p 'commands; to; load; programs' \ "
     echo "                        -c path/to/chocophlan/dir \         "
     echo "                        -u path/to/uniref/dir \             "
-    echo "                        -m path/to/clade/marker/info/file \ "
+    echo "                        -t path/to/clade/marker/info/file \ "
     echo "                        -f notificationEmail@forFailures.edu"
     echo "                                                            "
     echo " Parameters:                                                "
     echo "     -h    Print the parameter list below then exit.        "
+    echo "     -m    (Required) Are input fastq files merged? Add this"
+    echo "           parameter if so. Will cause error otherwise.     "
     echo "     -o    (Required) Path to pipeline result directory.    "
     echo "     -p    (Required) Single quoted string that contains    "
     echo "           commands to load all the necessary programs      "
@@ -101,12 +107,14 @@ while getopts ":ho:p:c:u:m:f:" opt; do
     echo "           PATH, etc.).                                     "
     echo "     -c    (Required) Path to ChocoPhlAn database directory."
     echo "     -u    (Required) Path to UniRef90 database directory.  "
-    echo "     -m    (Required) Path to clade marker info file        "
+    echo "     -t    (Required) Path to clade marker info file        "
     echo "           mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2    "
     echo "     -f    (Required) E-mail to send notifications to upon  "
     echo "           failure of any jobs.                             "
     echo " "
     exit 0
+    ;;
+    m) MERGE=1
     ;;
     o) RESULTS_DIR=$(echo $OPTARG | sed 's#/$##')
     ;;
@@ -116,7 +124,7 @@ while getopts ":ho:p:c:u:m:f:" opt; do
     ;;
     u) UNIREF=$(echo $OPTARG | sed 's#/$##')
     ;;
-    m) MARKERS="$OPTARG"
+    t) MARKERS="$OPTARG"
     ;;
     f) FAIL_EMAIL="$OPTARG"
     ;;
@@ -167,17 +175,17 @@ if [[ ! -d "$UNIREF" ]]; then
   exit 1
 fi
 
-# -m
+# -t
 if [[ -z "$MARKERS" ]]; then
-  echo "ERROR: Argument -m is required, please supply path to the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2"
+  echo "ERROR: Argument -t is required, please supply path to the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2"
   exit 1
 fi
 if [[ -d "$MARKERS" ]]; then
-  echo "ERROR: Argument -m should be the path to a single file, not a directory, please supply path to the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2"
+  echo "ERROR: Argument -t should be the path to a single file, not a directory, please supply path to the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2"
   exit 1
 fi
 if echo $MARKERS | grep -q -v "mpa_v30_CHOCOPhlAn_201901_marker_info\.txt\.bz2"; then
-  echo "ERROR: path given to -m does not contain the file name mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2, please supply the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2 to this argument"
+  echo "ERROR: path given to -t does not contain the file name mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2, please supply the clade marker info file mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2 to this argument"
   exit 1
 fi
 
@@ -219,11 +227,20 @@ fi
   echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
-  echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
   echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
-  echo "FILE=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
-  echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+  if [[ ! -z "$MERGE" ]]; then
+    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
+    echo "FILE=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
+  else
+    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_1.fastq.gz | wc -l)" >> bash_script.sh
+    echo "FILE1=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_1.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE2=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_2.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_paired_1' '{print \$1}')" >> bash_script.sh
+    echo "zcat \$FILE1 \$FILE2 > ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
+    echo "FILE=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
+  fi
   echo "humann --input \$FILE \\" >> bash_script.sh
   echo "--output ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling \\" >> bash_script.sh
   echo "--output-basename \$FILE_NAME \\" >> bash_script.sh
@@ -379,5 +396,4 @@ fi
   echo "Running of HUMAnN workflow complete"
   echo "Elapsed time: $(($SECONDS / 3600)) hr : $(($(($SECONDS % 3600)) / 60)) min : $(($SECONDS % 60)) sec"
   echo " "
-fi
 #################################################
