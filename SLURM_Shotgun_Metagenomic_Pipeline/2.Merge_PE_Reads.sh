@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
