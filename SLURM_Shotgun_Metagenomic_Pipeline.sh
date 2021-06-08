@@ -15,6 +15,7 @@
 #    SLURM:      Program is designed to work with a SLURM    #
 #                high performance computing cluster          #
 #                scheduling system.                          #
+#    R base:     For performing functions in pipeline script.#
 #    FastQC:     For performing initial quality reports.     #
 #    BBMerge:    For merging paired-end reads.               #
 #    BBDuk:      For adapter and quality trimming of raw wgs #
@@ -103,6 +104,7 @@ while getopts ":hi:o:p:r:c:u:t:f:ma:s:" opt; do
     echo "    SLURM:      Program is designed to work with a SLURM    "
     echo "                high performance computing cluster          "
     echo "                scheduling system.                          "
+    echo "    R base:     For performing functions in pipeline script."
     echo "    FastQC:     For performing initial quality reports.     "
     echo "    BBMerge:    For merging paired-end reads.               "
     echo "    BBDuk:      For adapter and quality trimming of raw wgs "
