@@ -196,6 +196,9 @@ elif echo $FAIL_EMAIL | grep -q -v '@'; then
   echo "ERROR: Argument -f requires a valid email, please give an email in the form of xxxx@xxxx.xxx"
 fi
 
+# Load programs
+$PROG_LOAD
+
 ###### TAXONOMIC AND FUNCTIONAL PROFILING #######
 
   SECONDS=0
