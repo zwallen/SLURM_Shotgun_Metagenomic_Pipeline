@@ -12,6 +12,7 @@
 #    SLURM:      Program is designed to work with a SLURM    #
 #                high performance computing cluster          #
 #                scheduling system.                          #
+#    R base:     For performing functions in pipeline script.#
 #    FastQC:     For performing initial quality reports.     #
 #                                                            #
 # Usage:                                                     #
@@ -55,6 +56,7 @@ while getopts ":hi:o:p:f:" opt; do
     echo "    SLURM:      Program is designed to work with a SLURM    "
     echo "                high performance computing cluster          "
     echo "                scheduling system.                          "
+    echo "    R base:     For performing functions in pipeline script."
     echo "    FastQC:     For performing initial quality reports.     "
     echo "                                                            "
     echo " Usage:                                                     "
