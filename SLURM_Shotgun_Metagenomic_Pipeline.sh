@@ -347,6 +347,9 @@ if [[ ! -z "$SKIP" ]]; then
   fi
 fi
 
+# Load programs
+$PROG_LOAD
+
 ###### CREATE DIRECTORY FOR PIPELINE OUTPUT #####
 DATE=$(date | awk '{print $3"_"$2"_"$6}')
 if [ -d "${OUT_DIR}/Metagenomic_Pipeline_${DATE}" ]
