@@ -11,15 +11,6 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=user@institution.edu
 
-#Enable conda command and load environment that has HUMAnN/MetaPhlAn programs
-#(needed for some functions within pipeline script)
-source /home/${USER}/miniconda3/etc/profile.d/conda.sh
-conda activate metagenomics
-
-#Load R module 
-#(needed for some functions within pipeline script)
-module load R
-
 #Provide location for directory containing sequences, and directory to place pipeline output
 SEQ_DIR=
 OUT_DIR=
