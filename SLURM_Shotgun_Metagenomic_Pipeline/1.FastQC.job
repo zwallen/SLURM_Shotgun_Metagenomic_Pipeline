@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+#SBATCH --partition=short
+#SBATCH --job-name=FastQC
+#SBATCH --error=1.FastQC.err
+#SBATCH --output=1.FastQC.out
+#SBATCH --ntasks=1
+#SBATCH --time=12:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=8000
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=user@institution.edu
+
+#Provide location of directory containing sequences and pipeline output directory
+SEQ_DIR=
+RESULTS_DIR=
+
+#Provide location of pipeline directory
+PIPELINE_DIR=
+
+#Launch pipeline script
+${PIPELINE_DIR}/SLURM_Shotgun_Metagenomic_Pipeline/1.FastQC.sh \
+-i $SEQ_DIR \
+-o $RESULTS_DIR \
+-p 'module load FastQC/0.11.7-Java-1.8.0_74; module load R; module unload R' \
+-f user@institution.edu
