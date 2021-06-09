@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+#SBATCH --partition=express
+#SBATCH --job-name=Initialize_Result_Directory
+#SBATCH --error=0.Initialize_Result_Directory.err
+#SBATCH --output=0.Initialize_Result_Directory.out
+#SBATCH --ntasks=1
+#SBATCH --time=2:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=32000
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=user@institution.edu
+
+#Provide location of directory to place pipeline output
+OUT_DIR=
+
+#Provide location of pipeline directory
+PIPELINE_DIR=
+
+#Launch pipeline script
+${PIPELINE_DIR}/SLURM_Shotgun_Metagenomic_Pipeline/0.Initialize_Result_Directory.sh \
+-o $OUT_DIR
