@@ -420,7 +420,7 @@ else
   echo "> ${RESULTS_DIR}/0.FastQC_Initial_Reports/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script.sh
   
@@ -510,7 +510,7 @@ else
   echo "> ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script.sh
   
@@ -593,7 +593,7 @@ else
   echo "> ${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script.sh
   
@@ -676,7 +676,7 @@ else
   echo "> ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script.sh
   
@@ -799,7 +799,7 @@ else
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script.sh
   
@@ -838,7 +838,7 @@ else
   echo "mv \${FILE_NAME}_temp.txt \${DIR}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv" >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script.sh
   
@@ -934,7 +934,7 @@ else
   echo "./bash_script_\${SLURM_ARRAY_TASK_ID}.sh" >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script*sh
   
