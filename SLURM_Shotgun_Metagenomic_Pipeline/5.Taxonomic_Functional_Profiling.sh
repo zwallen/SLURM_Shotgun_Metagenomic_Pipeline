@@ -3,7 +3,7 @@
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 3 June 2021                                  #
+# Last updated: 8 June 2021                                  #
 #                                                            #
 # Description: Perform taxonomic and functional profiling    #
 # using HUMAnN/MetaPhlAn workflow.                           #
@@ -57,7 +57,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 3 June 2021                                  #"
+echo "# Last updated: 8 June 2021                                  #"
 echo "##############################################################"
 echo " "
 
@@ -258,7 +258,7 @@ $PROG_LOAD
   echo "> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script.sh
   
@@ -297,7 +297,7 @@ $PROG_LOAD
   echo "mv \${FILE_NAME}_temp.txt \${DIR}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv" >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script.sh
   
@@ -393,7 +393,7 @@ $PROG_LOAD
   echo "./bash_script_\${SLURM_ARRAY_TASK_ID}.sh" >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script*sh
   
