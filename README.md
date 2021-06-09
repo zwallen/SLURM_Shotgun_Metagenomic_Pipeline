@@ -10,7 +10,7 @@ SLURM_Shotgun_Metagenomic_Pipeline
 |                                         Instead of running the whole pipeline at once using the main wrapper script (SLURM_Shotgun_Metagenomic_Pipeline.sh),
 |                                         one can run it in chunks using these scripts. Useful for when the dataset is large, and will not finish running
 |                                         with using the main wrapper script, or if the main wrapper script failed or had to be stopped at a certain step.
-|                                         Each pipeline chunk comes with its own example job script or submitting it to a SLURM scheduler.
+|                                         Each pipeline chunk comes with its own example job script for submitting it to a SLURM scheduler.
 |
 |-- Reference_Files -- Directory that contains the shell script 0.get_reference_files.sh.
 |                      Running 0.get_reference_files.sh will download all the necessary and most up to date reference files and databases
