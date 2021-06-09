@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+#SBATCH --partition=medium
+#SBATCH --job-name=Remove_Host_Reads
+#SBATCH --error=4.Remove_Host_Reads.err
+#SBATCH --output=4.Remove_Host_Reads.out
+#SBATCH --ntasks=1
+#SBATCH --time=50:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=8000
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=user@institution.edu
+
+#Provide location of pipeline output directory
+RESULTS_DIR=
+
+#Provide location of pipeline directory
+PIPELINE_DIR=
+
+#Launch pipeline script
+${PIPELINE_DIR}/SLURM_Shotgun_Metagenomic_Pipeline/4.Remove_Host_Reads.sh \
+-o $RESULTS_DIR \
+-p "source /home/${USER}/miniconda3/etc/profile.d/conda.sh; conda activate metagenomics" \
+-r ${PIPELINE_DIR}/Reference_Files/GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set \
+-f user@institution.edu
