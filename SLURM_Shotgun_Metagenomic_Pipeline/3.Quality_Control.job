@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+#SBATCH --partition=short
+#SBATCH --job-name=Quality_Control
+#SBATCH --error=3.Quality_Control.err
+#SBATCH --output=3.Quality_Control.out
+#SBATCH --ntasks=1
+#SBATCH --time=12:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=8000
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=user@institution.edu
+
+#Provide location of directory containing sequences and pipeline output directory
+SEQ_DIR=
+RESULTS_DIR=
+
+#Provide location of pipeline directory
+PIPELINE_DIR=
+
+#Launch pipeline script
+${PIPELINE_DIR}/SLURM_Shotgun_Metagenomic_Pipeline/3.Quality_Control.sh \
+-i $SEQ_DIR \
+-o $RESULTS_DIR \
+-p "PATH=$PATH:/home/${USER}/bbmap" \
+-f user@institution.edu
