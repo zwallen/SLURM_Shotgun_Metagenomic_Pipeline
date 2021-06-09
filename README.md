@@ -10,6 +10,7 @@ SLURM_Shotgun_Metagenomic_Pipeline
 |                                         Instead of running the whole pipeline at once using the main wrapper script (SLURM_Shotgun_Metagenomic_Pipeline.sh),
 |                                         one can run it in chunks using these scripts. Useful for when the dataset is large, and will not finish running
 |                                         with using the main wrapper script, or if the main wrapper script failed or had to be stopped at a certain step.
+|                                         Each pipeline chunk comes with its own example job script or submitting it to a SLURM scheduler.
 |
 |-- Reference_Files -- Directory that contains the shell script 0.get_reference_files.sh.
 |                      Running 0.get_reference_files.sh will download all the necessary and most up to date reference files and databases
@@ -33,7 +34,7 @@ The `SLURM_Shotgun_Metagenomic_Pipeline.sh` script will internally submit jobs f
 For descriptions of required programs/databases and parameters for `SLURM_Shotgun_Metagenomic_Pipeline.sh` or `Create_Cladogram.sh` scripts, run the respective script with parameter `-h`.
 
 ### Separate shell scripts for individual pipeline steps
-The directory `SLURM_Shotgun_Metagenomic_Pipeline/` contains separate shell scripts that can perform each step of the pipeline individually, and are numbered in the sequence they are performed in the wrapper script `SLURM_Shotgun_Metagenomic_Pipeline.sh`. These have been provided as an alternative to running the whole pipeline in one shot. Using these can be useful if the dataset being processed is very large, and will not complete in time using the one shot `SLURM_Shotgun_Metagenomic_Pipeline.sh` wrapper script. Additionally, these are useful if the main wrapper script has failed, or stopped, at a certain step, and you want to continue with the pipeline without having to re-run the `SLURM_Shotgun_Metagenomic_Pipeline.sh` script, essentially starting the pipeline over.
+The directory `SLURM_Shotgun_Metagenomic_Pipeline/` contains separate shell scripts that can perform each step of the pipeline individually, and are numbered in the sequence they are performed in the wrapper script `SLURM_Shotgun_Metagenomic_Pipeline.sh`. These have been provided as an alternative to running the whole pipeline in one shot. Using these can be useful if the dataset being processed is very large, and will not complete in time using the one shot `SLURM_Shotgun_Metagenomic_Pipeline.sh` wrapper script. Additionally, these are useful if the main wrapper script has failed, or stopped, at a certain step, and you want to continue with the pipeline without having to re-run the `SLURM_Shotgun_Metagenomic_Pipeline.sh` script.
 
 ```
 ./SLURM_Shotgun_Metagenomic_Pipeline.sh -h
@@ -41,7 +42,7 @@ The directory `SLURM_Shotgun_Metagenomic_Pipeline/` contains separate shell scri
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 3 June 2021                                  #
+# Last updated: 8 June 2021                                  #
 ##############################################################
  
  Description: This is a wrapper program that wraps various  
@@ -54,6 +55,7 @@ The directory `SLURM_Shotgun_Metagenomic_Pipeline/` contains separate shell scri
     SLURM:      Program is designed to work with a SLURM    
                 high performance computing cluster          
                 scheduling system.                          
+    R base:     For performing functions in pipeline script.
     FastQC:     For performing initial quality reports.     
     BBMerge:    For merging paired-end reads.               
     BBDuk:      For adapter and quality trimming of raw wgs 
