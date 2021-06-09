@@ -14,8 +14,9 @@
 #    BBMerge:    For merging paired-end reads.               #
 #                                                            #
 # Usage:                                                     #
-# ./2.Merge_PE_Reads.sh -s                                   #
-#                       OR                                   #
+# ./2.Merge_PE_Reads.sh -o output_dir \                      #
+#                       -s \                                 #
+#                     OR                                     #
 #                       -i input_seqs_dir \                  #
 #                       -o output_dir \                      #
 #                       -p 'commands; to; load; programs' \  #
@@ -24,6 +25,7 @@
 #                                                            #
 # Parameters:                                                #
 #     -h    Print the parameter list below then exit.        #
+#     -o    (Required) Path to pipeline result directory.    #
 #     -s    (Required) Skip merging of paired-end reads, just#
 #           make empty directory to keep numbering consistent#
 #   OR                                                       #
@@ -64,8 +66,9 @@ while getopts ":hsi:o:p:a:f:" opt; do
     echo "    BBMerge:    For merging paired-end reads.               "
     echo "                                                            "
     echo " Usage:                                                     "
-    echo " ./2.Merge_PE_Reads.sh -s                                   "
-    echo "                       OR                                   "
+    echo " ./2.Merge_PE_Reads.sh -o output_dir \                      "
+    echo "                       -s \                                 "
+    echo "                     OR                                     "
     echo "                       -i input_seqs_dir \                  "
     echo "                       -o output_dir \                      "
     echo "                       -p 'commands; to; load; programs' \  "
@@ -74,6 +77,7 @@ while getopts ":hsi:o:p:a:f:" opt; do
     echo "                                                            "
     echo " Parameters:                                                "
     echo "     -h    Print the parameter list below then exit.        "
+    echo "     -o    (Required) Path to pipeline result directory.    "
     echo "     -s    (Required) Skip merging of paired-end reads, just"
     echo "           make empty directory to keep numbering consistent"
     echo "   OR                                                       "
@@ -94,11 +98,11 @@ while getopts ":hsi:o:p:a:f:" opt; do
     echo " "
     exit 0
     ;;
+    o) RESULTS_DIR=$(echo $OPTARG | sed 's#/$##')
+    ;;
     s) SKIP=1
     ;;
     i) SEQ_DIR=$(echo $OPTARG | sed 's#/$##')
-    ;;
-    o) RESULTS_DIR=$(echo $OPTARG | sed 's#/$##')
     ;;
     p) PROG_LOAD="$OPTARG"
     ;;
