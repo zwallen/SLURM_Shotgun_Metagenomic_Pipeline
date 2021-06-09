@@ -3,7 +3,7 @@
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 3 June 2021                                  #
+# Last updated: 8 June 2021                                  #
 #                                                            #
 # Description: Remove adapters, phix sequences using BBDuk.  #
 #                                                            #
@@ -41,7 +41,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 3 June 2021                                  #"
+echo "# Last updated: 8 June 2021                                  #"
 echo "##############################################################"
 echo " "
 
@@ -217,7 +217,7 @@ fi
   echo "> ${RESULTS_DIR}/2.Quality_Controlled_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
-  sbatch bash_script.sh
+  sbatch bash_script.sh > /dev/null
   
   rm bash_script.sh
   
