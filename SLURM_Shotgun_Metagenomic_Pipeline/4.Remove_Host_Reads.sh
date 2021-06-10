@@ -259,5 +259,4 @@ fi
   echo "Running of KneadData complete"
   echo "Elapsed time: $(($SECONDS / 3600)) hr : $(($(($SECONDS % 3600)) / 60)) min : $(($SECONDS % 60)) sec"
   echo " "
-fi
 #################################################
