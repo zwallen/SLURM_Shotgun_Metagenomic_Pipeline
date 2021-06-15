@@ -36,6 +36,9 @@ For descriptions of required programs/databases and parameters for `SLURM_Shotgu
 ### Separate shell scripts for individual pipeline steps
 The directory `SLURM_Shotgun_Metagenomic_Pipeline/` contains separate shell scripts that can perform each step of the pipeline individually, and are numbered in the sequence they are performed in the wrapper script `SLURM_Shotgun_Metagenomic_Pipeline.sh`. These have been provided as an alternative to running the whole pipeline in one shot. Using these can be useful if the dataset being processed is very large, and will not complete in time using the one shot `SLURM_Shotgun_Metagenomic_Pipeline.sh` wrapper script. Additionally, these are useful if the main wrapper script has failed, or stopped, at a certain step, and you want to continue with the pipeline without having to re-run the `SLURM_Shotgun_Metagenomic_Pipeline.sh` script.
 
+### Generating a report for tracking number of sequences through pipeline
+The `SLURM_Shotgun_Metagenomic_Pipeline/` that houses separate shell scripts for each step of the pipeline also houses a script that can be used to generate a report detailing how many sequences were outputted from each step of the pipeline (`6.Pipeline_Report.sh`).
+
 ```
 ./SLURM_Shotgun_Metagenomic_Pipeline.sh -h
 
