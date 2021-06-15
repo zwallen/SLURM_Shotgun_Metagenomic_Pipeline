@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+#SBATCH --partition=express
+#SBATCH --job-name=Pipeline_Report
+#SBATCH --error=6.Pipeline_Report.err
+#SBATCH --output=6.Pipeline_Report.out
+#SBATCH --ntasks=1
+#SBATCH --time=2:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=16000
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=wallenz@uab.edu
+
+#Provide location of pipeline output directory
+RESULTS_DIR=
+
+#Provide location of pipeline directory
+PIPELINE_DIR=
+
+#Launch pipeline script
+${PIPELINE_DIR}/SLURM_Shotgun_Metagenomic_Pipeline/6.Pipeline_Report.sh \
+-o $RESULTS_DIR
