@@ -3,7 +3,7 @@
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 15 June 2021                                 #
+# Last updated: 16 June 2021                                 #
 #                                                            #
 # Description: Create tracking report of sequence read       #
 # numbers through pipeline.                                  #
@@ -20,7 +20,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 15 June 2021                                 #"
+echo "# Last updated: 16 June 2021                                 #"
 echo "##############################################################"
 echo " "
 
@@ -70,7 +70,7 @@ echo " "
 echo "*** Creating tracking report of sequences through pipeline ***"
 echo " "
 
-echo "Sample Input Quality_controlled Decontaminated Taxonomy_mapped Uniref_mapped" | sed 's/ /\t/g' > ${RESULTS_DIR}/5.Pipeline_Report.txt
+echo "Sample Input Quality_controlled Decontaminated Profiled" | sed 's/ /\t/g' > ${RESULTS_DIR}/5.Pipeline_Report.txt
 
 ls -l -d ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*_Profiles | awk '{print $NF}' | awk -F"/" '{print $NF}' | awk -F"_Profiles" '{print $1}' | \
 while read sample; do
@@ -79,13 +79,10 @@ while read sample; do
   QC_SEQ=$(grep 'Result:' ${RESULTS_DIR}/2.Quality_Controlled_Sequences/${sample}.log | awk '{print $2}')
   DECONTAM_SEQ=$(( $(grep 'READ COUNT: final pair1' ${RESULTS_DIR}/3.Decontaminated_Sequences/${sample}_kneaddata.log | awk '{print $NF}' | awk -F'.' '{print $1}') + \
                $(grep 'READ COUNT: final pair2' ${RESULTS_DIR}/3.Decontaminated_Sequences/${sample}_kneaddata.log | awk '{print $NF}' | awk -F'.' '{print $1}') ))
-  TAXA_MAPPED=$(echo $DECONTAM_SEQ*$(echo $(grep -P -o '.{0,5}% overall alignment rate' ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${sample}_Profiles/${sample}_humann.log | \
-                                            sed 's/\n//g' | grep -P -o '.{0,5}%' | sed 's/%//g')/100 | R --vanilla --quiet | sed -n '2s/.* //p') | \
-                R --vanilla --quiet | sed -n '2s/.* //p')
-  GENE_MAPPED=$(( $DECONTAM_SEQ - \
-                  $(grep 'UNMAPPED' ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${sample}_Profiles/${sample}_genefamilies.tsv | awk '{print $NF}' | awk -F'.' '{print $1}') 
+  PROFILED_SEQ=$(( $DECONTAM_SEQ - \
+                   $(grep 'UNMAPPED' ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${sample}_Profiles/${sample}_genefamilies.tsv | awk '{print $NF}' | awk -F'.' '{print $1}') 
                  ))
-  echo "$sample $BEGIN_SEQ $QC_SEQ $DECONTAM_SEQ $TAXA_MAPPED $GENE_MAPPED" | sed 's/ /\t/g' >> ${RESULTS_DIR}/5.Pipeline_Report.txt
+  echo "$sample $BEGIN_SEQ $QC_SEQ $DECONTAM_SEQ $PROFILED_SEQ" | sed 's/ /\t/g' >> ${RESULTS_DIR}/5.Pipeline_Report.txt
 done
 
 echo " "
