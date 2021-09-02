@@ -22,7 +22,7 @@ PIPELINE_DIR=
 ${PIPELINE_DIR}/SLURM_Shotgun_Metagenomic_Pipeline.sh \
 -i ${SEQ_DIR} \
 -o ${OUT_DIR} \
--p "module load FastQC; module load R; PATH=$PATH:/home/${USER}/bbmap; source /home/user/miniconda3/etc/profile.d/conda.sh; conda activate biobakery3" \
+-p "module load FastQC; module load R; PATH=$PATH:/home/${USER}/bbmap; source /home/${USER}/miniconda3/etc/profile.d/conda.sh; conda activate biobakery3" \
 -r ${PIPELINE_DIR}/Reference_Files/GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set \
 -c ${PIPELINE_DIR}/Reference_Files/full_chocophlan.v296_201901b \
 -u ${PIPELINE_DIR}/Reference_Files/uniref90_annotated_v201901b_full \
