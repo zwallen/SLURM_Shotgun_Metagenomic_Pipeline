@@ -20,7 +20,7 @@ PIPELINE_DIR=
 #Launch pipeline script
 ${PIPELINE_DIR}/SLURM_Shotgun_Metagenomic_Pipeline/5.Taxonomic_Functional_Profiling.sh \
 -o $RESULTS_DIR \
--p "source /home/${USER}/miniconda3/etc/profile.d/conda.sh; conda activate metagenomics" \
+-p "source /home/${USER}/miniconda3/etc/profile.d/conda.sh; conda activate biobakery3" \
 -c ${PIPELINE_DIR}/Reference_Files/full_chocophlan.v296_201901 \
 -u ${PIPELINE_DIR}/Reference_Files/uniref90_annotated_v201901 \
 -t ${PIPELINE_DIR}/Reference_Files/mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2 \
