@@ -506,7 +506,7 @@ else
   echo "in2=\$FILE2 \\" >> bash_script.sh
   echo "out=${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.fastq.gz \\" >> bash_script.sh
   echo "adapters=${ADAPTERS} \\" >> bash_script.sh
-  echo "rem k=31 iterations=5 extend2=20 ecct t=2 -Xmx64g \\" >> bash_script.sh
+  echo "rem iterations=5 extend2=20 ecct t=2 -Xmx64g \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/1.Merged_Paired_End_Sequences/\${FILE_NAME}.log 2>&1"  >> bash_script.sh
   chmod +x bash_script.sh
   
