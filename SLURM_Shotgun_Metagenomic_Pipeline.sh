@@ -80,7 +80,7 @@
 #     -s    (Optional) Skip certain steps in the pipeline if #
 #           need be. Provide a comma separated list of steps #
 #           that you wish to skip in the pipeline. List may  #
-#           have the values: fastqc, qc, decontam, humann    #
+#           have the values: fastqc, QC, decontam, humann    #
 ##############################################################
 
 echo " "
@@ -170,7 +170,7 @@ while getopts ":hi:o:p:r:c:u:t:f:ma:s:" opt; do
     echo "     -s    (Optional) Skip certain steps in the pipeline if "
     echo "           need be. Provide a comma separated list of steps "
     echo "           that you wish to skip in the pipeline. List may  "
-    echo "           have the values: fastqc, qc, decontam, humann    "
+    echo "           have the values: fastqc, QC, decontam, humann    "
     echo " "
     exit 0
     ;;
@@ -343,14 +343,14 @@ fi
 if [[ ! -z "$SKIP" ]]; then
   if echo $SKIP | grep -q "fastqc"; then
     :
-  elif echo $SKIP | grep -q "qc"; then
+  elif echo $SKIP | grep -q "QC"; then
     :
   elif echo $SKIP | grep -q "decontam"; then
     :
   elif echo $SKIP | grep -q "humann"; then
     :
   else
-    echo "ERROR: Invalid argument given to -s, please specify one or more of: fastqc,qc,decontam,humann"
+    echo "ERROR: Invalid argument given to -s, please specify one or more of: fastqc,QC,decontam,humann"
     exit 1
   fi
 fi
@@ -528,7 +528,7 @@ fi
 #################################################
 
 ################# QC WITH BBDUK #################
-if echo $SKIP | grep -q "qc"; then
+if echo $SKIP | grep -q "QC"; then
   echo " "
   echo "*** Skipping running of BBDuk for adapter/quality trimming and filtering of input fastq files ***"
   echo " "
