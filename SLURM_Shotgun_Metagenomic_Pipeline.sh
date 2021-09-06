@@ -643,8 +643,27 @@ else
   
   ##### Run BBMap/BBSplit #####
   #Index given reference genome file
-  bbsplit.sh ref=${HOST_REF} path=${RESULTS_DIR}/3.Decontaminated_Sequences \
-  > ${RESULTS_DIR}/3.Decontaminated_Sequences/Host_Ref_Indexing.log 2>&1
+  echo '#!/bin/bash' > bash_script.sh
+  echo "#SBATCH --partition=express" >> bash_script.sh
+  echo "#SBATCH --job-name=Host_Ref_Indexing" >> bash_script.sh
+  echo "#SBATCH --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Host_Ref_Indexing.err" >> bash_script.sh
+  echo "#SBATCH --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/Host_Ref_Indexing.out" >> bash_script.sh
+  echo "#SBATCH --time=2:00:00" >> bash_script.sh
+  echo "#SBATCH --ntasks=1" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=10" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=16000" >> bash_script.sh
+  echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
+  echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
+  echo "#SBATCH --wait" >> bash_script.sh
+  echo "$PROG_LOAD" >> bash_script.sh
+  echo "bbsplit.sh ref=${HOST_REF} path=${RESULTS_DIR}/3.Decontaminated_Sequences \\" >> bash_script.sh
+  echo "t=10 -Xmx160g \\" >> bash_script.sh
+  echo "> ${RESULTS_DIR}/3.Decontaminated_Sequences/Host_Ref_Indexing.log 2>&1" >> bash_script.sh
+  chmod +x bash_script.sh
+  
+  sbatch bash_script.sh > /dev/null
+  
+  rm bash_script.sh
   
   #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
