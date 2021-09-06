@@ -3,7 +3,7 @@
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 8 June 2021                                  #
+# Last updated: 6 Sep 2021                                   #
 #                                                            #
 # Description: This is a wrapper program that wraps various  #
 # programs to process raw paired-end whole genome shotgun    #
@@ -20,9 +20,10 @@
 #    BBMerge:    For merging paired-end reads.               #
 #    BBDuk:      For adapter and quality trimming of raw wgs #
 #                reads. Also can remove PhiX sequences.      #
-#    KneadData:  For removing host contamination from wgs    #
-#                reads. Requires Bowtie2 database file to    #
-#                map reads against.                          #
+#    BBMap/                                                  #
+#    BBSplit:    For removing host contamination from wgs    #
+#                reads. Requires FASTA genome reference file #
+#                to map reads against.                       #
 #    HUMAnN:     For generating taxonomic, gene family, and  #
 #                pathway abundances.                         #
 #    ChocoPhlAn: Database used for taxonomic profiling. Can  #
@@ -41,7 +42,7 @@
 # SLURM_Shotgun_Metagenomic_Pipeline.sh -i input_seqs_dir \  #
 #                    -o output_dir \                         #
 #                    -p 'commands; to; load; programs' \     #
-#                    -r path/to/host/ref/files/dir \         #
+#                    -r path/to/host/ref/file.fa \           #
 #                    -c path/to/chocophlan/dir \             #
 #                    -u path/to/uniref/dir \                 #
 #                    -t path/to/clade/marker/info/file \     #
@@ -63,8 +64,8 @@
 #           needed to run pipeline steps (e.g. activating    #
 #           conda environments, loading modules, adding to   #
 #           PATH, etc.).                                     #
-#     -r    (Required) Path to directory of host genome      #
-#           Bowtie2 indexed reference files (.bt2 files).    #
+#     -r    (Required) Path to reference genome file of host.#
+#           Should be in FASTA format, and uncompressed.     #
 #     -c    (Required) Path to ChocoPhlAn database directory.#
 #     -u    (Required) Path to UniRef90 database directory.  #
 #     -t    (Required) Path to clade marker info file        #
@@ -79,14 +80,14 @@
 #     -s    (Optional) Skip certain steps in the pipeline if #
 #           need be. Provide a comma separated list of steps #
 #           that you wish to skip in the pipeline. List may  #
-#           have the values: fastqc, bbduk, kneaddata, humann#
+#           have the values: fastqc, qc, decontam, humann    #
 ##############################################################
 
 echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 8 June 2021                                  #"
+echo "# Last updated: 6 Sep 2021                                   #"
 echo "##############################################################"
 echo " "
 
@@ -109,9 +110,10 @@ while getopts ":hi:o:p:r:c:u:t:f:ma:s:" opt; do
     echo "    BBMerge:    For merging paired-end reads.               "
     echo "    BBDuk:      For adapter and quality trimming of raw wgs "
     echo "                reads. Also can remove PhiX sequences.      "
-    echo "    KneadData:  For removing host contamination from wgs    "
-    echo "                reads. Requires Bowtie2 database file to    "
-    echo "                map reads against.                          "
+    echo "    BBMap/                                                  "
+    echo "    BBSplit:    For removing host contamination from wgs    "
+    echo "                reads. Requires FASTA genome reference file "
+    echo "                to map reads against.                       "
     echo "    HUMAnN:     For generating taxonomic, gene family, and  "
     echo "                pathway abundances.                         "
     echo "    ChocoPhlAn: Database used for taxonomic profiling. Can  "
@@ -130,7 +132,7 @@ while getopts ":hi:o:p:r:c:u:t:f:ma:s:" opt; do
     echo " SLURM_Shotgun_Metagenomic_Pipeline.sh -i input_seqs_dir \  "
     echo "                    -o output_dir \                         "
     echo "                    -p 'commands; to; load; programs' \     "
-    echo "                    -r path/to/host/ref/files/dir \         "
+    echo "                    -r path/to/host/ref/file.fa \           "
     echo "                    -c path/to/chocophlan/dir \             "
     echo "                    -u path/to/uniref/dir \                 "
     echo "                    -t path/to/clade/marker/info/file \     "
@@ -152,8 +154,8 @@ while getopts ":hi:o:p:r:c:u:t:f:ma:s:" opt; do
     echo "           needed to run pipeline steps (e.g. activating    "
     echo "           conda environments, loading modules, adding to   "
     echo "           PATH, etc.).                                     "
-    echo "     -r    (Required) Path to directory of host genome      "
-    echo "           Bowtie2 indexed reference files (.bt2 files).    "
+    echo "     -r    (Required) Path to reference genome file of host."
+    echo "           Should be in FASTA format, and uncompressed.     "
     echo "     -c    (Required) Path to ChocoPhlAn database directory."
     echo "     -u    (Required) Path to UniRef90 database directory.  "
     echo "     -t    (Required) Path to clade marker info file        "
@@ -168,7 +170,7 @@ while getopts ":hi:o:p:r:c:u:t:f:ma:s:" opt; do
     echo "     -s    (Optional) Skip certain steps in the pipeline if "
     echo "           need be. Provide a comma separated list of steps "
     echo "           that you wish to skip in the pipeline. List may  "
-    echo "           have the values: fastqc, bbduk, kneaddata, humann"
+    echo "           have the values: fastqc, qc, decontam, humann    "
     echo " "
     exit 0
     ;;
@@ -178,7 +180,7 @@ while getopts ":hi:o:p:r:c:u:t:f:ma:s:" opt; do
     ;;
     p) PROG_LOAD="$OPTARG"
     ;;
-    r) HOST_REF=$(echo $OPTARG | sed 's#/$##')
+    r) HOST_REF="$OPTARG"
     ;;
     c) CHOCO=$(echo $OPTARG | sed 's#/$##')
     ;;
@@ -253,17 +255,21 @@ fi
 
 # -r
 if [[ -z "$HOST_REF" ]]; then
-  echo "ERROR: Argument -r is required, please supply a directory with host genome Bowtie2 indexed reference sequences"
+  echo "ERROR: Argument -r is required, please supply a host genome reference file in FASTA format"
   exit 1
 fi
-if [[ ! -d "$HOST_REF" ]]; then
-  echo "ERROR: Argument -r should be a directory, please supply a directory with host genome Bowtie2 indexed reference sequences"
+if [[ -d "$HOST_REF" ]]; then
+  echo "ERROR: Argument -r should be a single FASTA file, please supply a host genome reference file in FASTA format"
   exit 1
 fi
-if ls -l $HOST_REF | grep -q ".bt2"; then
+if ls -l $HOST_REF | grep -q ".fa"; then
+  :
+elif ls -l $HOST_REF | grep -q ".fna"; then
+  :
+elif ls -l $HOST_REF | grep -q ".fasta"; then
   :
 else
-  echo "ERROR: Expecting host genome Bowtie2 indexed reference files to have extension .bt2, but none found"
+  echo "ERROR: Expecting host genome reference file to be in FASTA format with extension '.fa', '.fna', or '.fasta'"
   exit 1
 fi
 
@@ -337,14 +343,14 @@ fi
 if [[ ! -z "$SKIP" ]]; then
   if echo $SKIP | grep -q "fastqc"; then
     :
-  elif echo $SKIP | grep -q "bbduk"; then
+  elif echo $SKIP | grep -q "qc"; then
     :
-  elif echo $SKIP | grep -q "kneaddata"; then
+  elif echo $SKIP | grep -q "decontam"; then
     :
   elif echo $SKIP | grep -q "humann"; then
     :
   else
-    echo "ERROR: Invalid argument given to -s, please specify one or more of: fastqc,bbduk,kneaddata,humann"
+    echo "ERROR: Invalid argument given to -s, please specify one or more of: fastqc,qc,decontam,humann"
     exit 1
   fi
 fi
@@ -604,10 +610,10 @@ else
 fi
 #################################################
 
-##### REMOVAL OF HOST READS WITH KNEADDATA ######
-if echo $SKIP | grep -q "kneaddata"; then
+##### REMOVAL OF HOST READS WITH BBMAP/BBSPLIT ######
+if echo $SKIP | grep -q "decontam"; then
   echo " "
-  echo "*** Skipping running of KneadData for removal of contaminant host reads ***"
+  echo "*** Skipping running of BBMap/BBSplit for removal of contaminant host reads ***"
   echo " "
   
   #Create directory
@@ -622,10 +628,10 @@ if echo $SKIP | grep -q "kneaddata"; then
 else
   SECONDS=0
   echo " "
-  echo "*** Running KneadData to perform removal of contaminant host reads ***"
+  echo "*** Running BBMap/BBSplit to perform removal of contaminant host reads ***"
   echo " "
   
-  #Create directory for quality controlled sequences
+  #Create directory
   if [ -d "${RESULTS_DIR}/3.Decontaminated_Sequences" ]
   then
 	  :
@@ -635,7 +641,11 @@ else
 	  mkdir ${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output
   fi
   
-  ##### Run KneadData #####
+  ##### Run BBMap/BBSplit #####
+  #Index given reference genome file
+  bbsplit.sh ref=${HOST_REF} path=${RESULTS_DIR}/3.Decontaminated_Sequences \
+  > ${RESULTS_DIR}/3.Decontaminated_Sequences/Host_Ref_Indexing.log 2>&1
+  
   #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
   echo "#SBATCH --partition=short" >> bash_script.sh
@@ -644,8 +654,8 @@ else
   echo "#SBATCH --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.Output/Decontam_%A_%a.out" >> bash_script.sh
   echo "#SBATCH --time=12:00:00" >> bash_script.sh
   echo "#SBATCH --ntasks=1" >> bash_script.sh
-  echo "#SBATCH --cpus-per-task=2" >> bash_script.sh
-  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=10" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=16000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
   if [[ ! -z "$MERGE" ]]; then
@@ -658,34 +668,29 @@ else
   if [[ ! -z "$MERGE" ]]; then
     echo "FILE=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
     echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
-    echo "kneaddata --input \$FILE \\" >> bash_script.sh
+    echo "bbsplit.sh in=\${FILE} \\" >> bash_script.sh
   else
     echo "FILE1=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R1_001.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
     echo "FILE2=\$(ls ${RESULTS_DIR}/2.Quality_Controlled_Sequences/*R2_001.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
     echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
-    echo "kneaddata --input \$FILE1 \\" >> bash_script.sh
-    echo "--input \$FILE2 \\" >> bash_script.sh
+    echo "bbsplit.sh in1=\${FILE1} \\" >> bash_script.sh
+    echo "in2=\${FILE2} \\" >> bash_script.sh
   fi
-  echo "--output ${RESULTS_DIR}/3.Decontaminated_Sequences \\" >> bash_script.sh
-  echo "--output-prefix \$FILE_NAME \\" >> bash_script.sh
-  echo "--log ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_kneaddata.log \\" >> bash_script.sh
-  echo "--reference-db $HOST_REF \\" >> bash_script.sh
-  echo "--bypass-trim \\" >> bash_script.sh
-  echo "--threads 2 \\" >> bash_script.sh
-  echo "--verbose \\" >> bash_script.sh
+  echo "path=${RESULTS_DIR}/3.Decontaminated_Sequences \\" >> bash_script.sh
+  echo "outu1=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_R1_001.fastq \\" >> bash_script.sh
+  echo "outu2=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_R2_001.fastq \\" >> bash_script.sh
+  echo "basename=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}.%_contam_#.fastq \\" >> bash_script.sh
+  echo "t=10 -Xmx160g \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
   
   sbatch bash_script.sh > /dev/null
   
   rm bash_script.sh
-  
-  if [[ -z "$MERGE" ]]; then
-    rm ${RESULTS_DIR}/3.Decontaminated_Sequences/*unmatched*fastq
-  fi
+  rm -r ${RESULTS_DIR}/3.Decontaminated_Sequences/ref
   
   ##### Gzip output #####
-  echo "Compressing KneadData output..."
+  echo "Compressing BBMap/BBSplit output..."
   echo " "
   
   #Launch gzip for each file
@@ -703,7 +708,7 @@ else
 	   --mail-user=${FAIL_EMAIL} \
 	   --wrap="gzip $file" | \
 	   awk '{print $4}' >> job_ids.txt
-	   sleep 1
+	   sleep 30s
   done
   
   #Hold script here until all jobs are completed
@@ -729,7 +734,7 @@ else
   echo " "
   
   #Signal jobs have ended
-  echo "Running of KneadData complete"
+  echo "Running of BBMap/BBSplit complete"
   echo "Elapsed time: $(($SECONDS / 3600)) hr : $(($(($SECONDS % 3600)) / 60)) min : $(($SECONDS % 60)) sec"
   echo " "
 fi
@@ -765,14 +770,14 @@ else
   echo "#SBATCH --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/Profiling_%A_%a.out" >> bash_script.sh
   echo "#SBATCH --time=50:00:00" >> bash_script.sh
   echo "#SBATCH --ntasks=1" >> bash_script.sh
-  echo "#SBATCH --cpus-per-task=4" >> bash_script.sh
-  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=10" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=16000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
   if [[ ! -z "$MERGE" ]]; then
     echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | wc -l)" >> bash_script.sh
   else
-    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_1.fastq.gz | wc -l)" >> bash_script.sh
+    echo "#SBATCH --array=1-$(ls -l ${RESULTS_DIR}/3.Decontaminated_Sequences/*R1_001.fastq.gz | wc -l)" >> bash_script.sh
   fi
   echo "#SBATCH --wait" >> bash_script.sh
   echo "$PROG_LOAD" >> bash_script.sh
@@ -780,9 +785,9 @@ else
     echo "FILE=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
     echo "FILE_NAME=\$(echo \$FILE | awk -F '/' '{print \$NF}' | awk -F '.fastq.gz' '{print \$1}')" >> bash_script.sh
   else
-    echo "FILE1=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_1.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
-    echo "FILE2=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*paired_2.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
-    echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_paired_1' '{print \$1}')" >> bash_script.sh
+    echo "FILE1=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*R1_001.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE2=\$(ls ${RESULTS_DIR}/3.Decontaminated_Sequences/*R2_001.fastq.gz | sed -n \${SLURM_ARRAY_TASK_ID}p)" >> bash_script.sh
+    echo "FILE_NAME=\$(echo \$FILE1 | awk -F '/' '{print \$NF}' | awk -F '_R1_001' '{print \$1}')" >> bash_script.sh
     echo "zcat \$FILE1 \$FILE2 > ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
     echo "FILE=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
   fi
@@ -793,7 +798,7 @@ else
   echo "--nucleotide-database $CHOCO \\" >> bash_script.sh
   echo "--protein-database $UNIREF \\" >> bash_script.sh
   echo "--prescreen-threshold 0.001 \\" >> bash_script.sh
-  echo "--threads 4 \\" >> bash_script.sh
+  echo "--threads 10 \\" >> bash_script.sh
   echo "--verbose \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
