@@ -3,7 +3,7 @@
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 8 June 2021                                  #
+# Last updated: 6 Sep 2021                                   #
 #                                                            #
 # Description: Perform taxonomic and functional profiling    #
 # using HUMAnN/MetaPhlAn workflow.                           #
@@ -57,7 +57,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 8 June 2021                                  #"
+echo "# Last updated: 6 Sep 2021                                   #"
 echo "##############################################################"
 echo " "
 

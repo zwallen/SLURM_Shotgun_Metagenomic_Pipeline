@@ -3,7 +3,7 @@
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 3 June 2021                                  #
+# Last updated: 6 Sep 2021                                   #
 #                                                            #
 # Description: Initialize the directory that pipeline results#
 # will be placed into.                                       #
@@ -28,7 +28,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 3 June 2021                                  #"
+echo "# Last updated: 6 Sep 2021                                   #"
 echo "##############################################################"
 echo " "
 
