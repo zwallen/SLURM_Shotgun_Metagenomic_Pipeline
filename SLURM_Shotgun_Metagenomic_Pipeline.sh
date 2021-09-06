@@ -528,7 +528,7 @@ fi
 #################################################
 
 ################# QC WITH BBDUK #################
-if echo $SKIP | grep -q "bbduk"; then
+if echo $SKIP | grep -q "qc"; then
   echo " "
   echo "*** Skipping running of BBDuk for adapter/quality trimming and filtering of input fastq files ***"
   echo " "
