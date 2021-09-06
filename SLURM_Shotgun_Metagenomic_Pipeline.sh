@@ -642,10 +642,6 @@ else
   fi
   
   ##### Run BBMap/BBSplit #####
-  #Index given reference genome file
-  bbsplit.sh ref=${HOST_REF} path=${RESULTS_DIR}/3.Decontaminated_Sequences \
-  > ${RESULTS_DIR}/3.Decontaminated_Sequences/Host_Ref_Indexing.log 2>&1
-  
   #Create script for running program and submit
   echo '#!/bin/bash' > bash_script.sh
   echo "#SBATCH --partition=short" >> bash_script.sh
@@ -677,6 +673,7 @@ else
     echo "in2=\${FILE2} \\" >> bash_script.sh
   fi
   echo "path=${RESULTS_DIR}/3.Decontaminated_Sequences \\" >> bash_script.sh
+  echo "ref=${HOST_REF} \\" >> bash_script.sh
   echo "outu1=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_R1_001.fastq \\" >> bash_script.sh
   echo "outu2=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_R2_001.fastq \\" >> bash_script.sh
   echo "basename=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}.%_contam_#.fastq \\" >> bash_script.sh
