@@ -696,9 +696,9 @@ else
     echo "in2=\${FILE2} \\" >> bash_script.sh
   fi
   echo "path=${RESULTS_DIR}/3.Decontaminated_Sequences \\" >> bash_script.sh
-  echo "outu1=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_R1_001.fastq \\" >> bash_script.sh
-  echo "outu2=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_R2_001.fastq \\" >> bash_script.sh
-  echo "basename=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}.%_contam_#.fastq \\" >> bash_script.sh
+  echo "outu1=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_R1_001.fastq.gz \\" >> bash_script.sh
+  echo "outu2=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}_R2_001.fastq.gz \\" >> bash_script.sh
+  echo "basename=${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}.%_contam_#.fastq.gz \\" >> bash_script.sh
   echo "t=10 -Xmx160g \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/3.Decontaminated_Sequences/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   chmod +x bash_script.sh
@@ -707,43 +707,6 @@ else
   
   rm bash_script.sh
   rm -r ${RESULTS_DIR}/3.Decontaminated_Sequences/ref
-  
-  ##### Gzip output #####
-  echo "Compressing BBMap/BBSplit output..."
-  echo " "
-  
-  #Launch gzip for each file
-  touch job_ids.txt
-  for file in ${RESULTS_DIR}/3.Decontaminated_Sequences/*.fastq; do
-    sbatch --partition=short \
-           --job-name=Gzip \
-	   --error=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Gzip.err \
-	   --output=${RESULTS_DIR}/3.Decontaminated_Sequences/0.ErrorOut/Gzip.out \
-	   --time=12:00:00 \
-	   --ntasks=1 \
-	   --cpus-per-task=1 \
-	   --mem-per-cpu=16000 \
-	   --mail-type=FAIL \
-	   --mail-user=${FAIL_EMAIL} \
-	   --wrap="gzip $file" | \
-	   awk '{print $4}' >> job_ids.txt
-	   sleep 1s
-  done
-  
-  #Hold script here until all jobs are completed
-  while :
-  do
-    if squeue -u $USER 2>&1 | grep -q -f job_ids.txt; then
-      sleep 1m
-      :
-    elif squeue -u $USER 2>&1 | grep -q "slurm_load_jobs error"; then
-      sleep 5m
-      :
-    else
-      break
-    fi
-  done
-  rm job_ids.txt
   
   #Move extracted host sequences to their own directory
   mkdir ${RESULTS_DIR}/3.Decontaminated_Sequences/Extracted_Host_Sequences
