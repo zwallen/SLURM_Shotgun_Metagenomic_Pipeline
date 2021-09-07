@@ -727,7 +727,7 @@ else
 	   --mail-user=${FAIL_EMAIL} \
 	   --wrap="gzip $file" | \
 	   awk '{print $4}' >> job_ids.txt
-	   sleep 30s
+	   sleep 5s
   done
   
   #Hold script here until all jobs are completed
