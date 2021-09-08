@@ -6,15 +6,18 @@ The following gives an overview of the overall structure of the repository:
 ```
 SLURM_Shotgun_Metagenomic_Pipeline
 |
+|-- Environment -- Directory that contains a .yml file to create a conda environment with all the necessary packages for running the pipeline scripts.
+|                  Optional to build this environment, provided for convenience to ensure proper programs and versions are downloaded.
+|
+|-- Reference_Files -- Directory that contains the shell script 0.get_reference_files.sh.
+|                      Running 0.get_reference_files.sh will download all the necessary and most up to date reference files and databases
+|                      used in the pipeline.
+|
 |-- SLURM_Shotgun_Metagenomic_Pipeline -- Directory that contains separate shell scripts for each step of the pipeline.
 |                                         Instead of running the whole pipeline at once using the main wrapper script (SLURM_Shotgun_Metagenomic_Pipeline.sh),
 |                                         one can run it in chunks using these scripts. Useful for when the dataset is large, and will not finish running
 |                                         with using the main wrapper script, or if the main wrapper script failed or had to be stopped at a certain step.
 |                                         Each pipeline chunk comes with its own example job script for submitting it to a SLURM scheduler.
-|
-|-- Reference_Files -- Directory that contains the shell script 0.get_reference_files.sh.
-|                      Running 0.get_reference_files.sh will download all the necessary and most up to date reference files and databases
-|                      used in the pipeline.
 |
 |-- Create_Cladogram.sh -- Convenience script for creating a cladogram with GraPhlAn. Takes the MetaPhlAn relative abundance table generated
 |                          during running of HUMAnN as input.
