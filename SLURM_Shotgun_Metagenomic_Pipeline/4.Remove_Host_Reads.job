@@ -20,6 +20,6 @@ PIPELINE_DIR=
 #Launch pipeline script
 ${PIPELINE_DIR}/SLURM_Shotgun_Metagenomic_Pipeline/4.Remove_Host_Reads.sh \
 -o $RESULTS_DIR \
--p "source /home/${USER}/miniconda3/etc/profile.d/conda.sh; conda activate biobakery3" \
+-p 'conda activate shotgun_pipeline' \
 -r ${PIPELINE_DIR}/Reference_Files/GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set \
 -f user@institution.edu
