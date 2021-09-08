@@ -293,7 +293,7 @@ $PROG_LOAD
   echo "<(sort -k1,1 \${DIR}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv) | \\" >> bash_script.sh
   echo "sed '1s/^/#clade_name NCBI_tax_id normalized_abundance\n/' | sed 's/ /\t/g' | \\" >> bash_script.sh
   echo "awk 'FNR==1{print;next}{val=\$3;\$3=\"~\";a[\$0]+=val}"'!'"b[\$0]++{c[++count]=\$0}END{for(i=1;i<=count;i++){sub(\"~\",a[c[i]],c[i]);print c[i]}}' OFS='\t' | \\" >> bash_script.sh
-  echo "cat <(grep '^#' \${DIR}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv) - > \${FILE_NAME}_temp.txt" >> bash_script.sh
+  echo "cat <(sed -n 1p \${DIR}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv) - > \${FILE_NAME}_temp.txt" >> bash_script.sh
   echo "mv \${FILE_NAME}_temp.txt \${DIR}/\${FILE_NAME}_metaphlan_norm_abun_table.tsv" >> bash_script.sh
   chmod +x bash_script.sh
   
@@ -314,6 +314,9 @@ $PROG_LOAD
     
     mv ${dir}/${FILE_NAME}_metaphlan_norm_abun_table.tsv \
     ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${FILE_NAME}_Profiles/${FILE_NAME}_metaphlan_norm_abun_table.tsv
+    
+    mv ${dir}/${FILE_NAME}_metaphlan_bowtie2.txt \
+    ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${FILE_NAME}_Profiles/${FILE_NAME}_metaphlan_bowtie2.txt
     
     mv ${dir}/${FILE_NAME}.log \
     ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${FILE_NAME}_Profiles/${FILE_NAME}_humann.log
