@@ -22,5 +22,5 @@ PIPELINE_DIR=
 ${PIPELINE_DIR}/SLURM_Shotgun_Metagenomic_Pipeline/3.Quality_Control.sh \
 -i $SEQ_DIR \
 -o $RESULTS_DIR \
--p "PATH=$PATH:/home/${USER}/bbmap" \
+-p "conda activate shotgun_pipeline" \
 -f user@institution.edu
