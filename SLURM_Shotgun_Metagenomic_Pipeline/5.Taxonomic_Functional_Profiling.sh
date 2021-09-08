@@ -225,8 +225,8 @@ $PROG_LOAD
   echo "#SBATCH --output=${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/0.Output/Profiling_%A_%a.out" >> bash_script.sh
   echo "#SBATCH --time=50:00:00" >> bash_script.sh
   echo "#SBATCH --ntasks=1" >> bash_script.sh
-  echo "#SBATCH --cpus-per-task=4" >> bash_script.sh
-  echo "#SBATCH --mem-per-cpu=32000" >> bash_script.sh
+  echo "#SBATCH --cpus-per-task=10" >> bash_script.sh
+  echo "#SBATCH --mem-per-cpu=16000" >> bash_script.sh
   echo "#SBATCH --mail-type=FAIL" >> bash_script.sh
   echo "#SBATCH --mail-user=${FAIL_EMAIL}" >> bash_script.sh
   if [[ ! -z "$MERGE" ]]; then
@@ -253,9 +253,10 @@ $PROG_LOAD
   echo "--nucleotide-database $CHOCO \\" >> bash_script.sh
   echo "--protein-database $UNIREF \\" >> bash_script.sh
   echo "--prescreen-threshold 0.001 \\" >> bash_script.sh
-  echo "--threads 4 \\" >> bash_script.sh
+  echo "--threads 10 \\" >> bash_script.sh
   echo "--verbose \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.log 2>&1" >> bash_script.sh
+  echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
   chmod +x bash_script.sh
   
   sbatch bash_script.sh > /dev/null
@@ -354,7 +355,7 @@ $PROG_LOAD
   echo "sed -i '2s/_metaphlan_norm_abun_table//g' ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables/metaphlan_norm_abun_table.tsv" >> bash_script_2.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*metaphlan_norm_abun_table.tsv" >> bash_script_2.sh
   chmod +x bash_script_2.sh
-    
+  
   echo '#!/bin/bash' > bash_script_3.sh
   echo "$PROG_LOAD" >> bash_script_3.sh
   echo "humann_join_tables --input ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/ \\" >> bash_script_3.sh
