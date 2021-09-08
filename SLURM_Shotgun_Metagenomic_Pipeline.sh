@@ -3,7 +3,7 @@
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 6 Sep 2021                                   #
+# Last updated: 8 Sep 2021                                   #
 #                                                            #
 # Description: This is a wrapper program that wraps various  #
 # programs to process raw paired-end whole genome shotgun    #
@@ -87,7 +87,7 @@ echo " "
 echo "##############################################################"
 echo "# Whole Genome Shotgun Metagenomic Processing Pipeline       #"
 echo "# by Zachary D Wallen                                        #"
-echo "# Last updated: 6 Sep 2021                                   #"
+echo "# Last updated: 8 Sep 2021                                   #"
 echo "##############################################################"
 echo " "
 
