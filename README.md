@@ -1,4 +1,4 @@
-This github repository houses a wrapper program (`SLURM_Shotgun_Metagenomic_Pipeline.sh`) for processing shotgun metagenomic sequences (derived from Illumina paired-end whole genome shotgun sequencing) to taxonomic (relative abundances and normalized abundance counts) and functional (gene and pathway) profiles on a high performance computing cluster using a SLURM scheduling system. The overall pipeline includes performing an intitial quality assessment on raw sequences using FastQC [https://www.bioinformatics.babraham.ac.uk/projects/fastqc/], merging of paired-end reads using BBMerge [https://sourceforge.net/projects/bbmap/] (optional), adapter removal and quality trimming/filtering using BBDuk [https://sourceforge.net/projects/bbmap/], removal of host contaminant reads using Bowtie2 as implemented in KneadData [https://huttenhower.sph.harvard.edu/kneaddata/], and lastly taxonomic and functional profiling using MetaPhlAn/HUMAnN workflow [https://huttenhower.sph.harvard.edu/humann/]. A convenience script is also located in the repository that wraps GraPhlAn [https://huttenhower.sph.harvard.edu/graphlan/] for generating a cladogram of top most abundant clades detected by MetaPhlAn (`Create_Cladogram.sh`).
+This github repository houses a wrapper program (`SLURM_Shotgun_Metagenomic_Pipeline.sh`) for processing shotgun metagenomic sequences (derived from Illumina paired-end whole genome shotgun sequencing) to taxonomic (relative abundances and normalized abundance counts) and functional (gene and pathway) profiles on a high performance computing cluster using a SLURM scheduling system. The overall pipeline includes performing an intitial quality assessment on raw sequences using FastQC [https://www.bioinformatics.babraham.ac.uk/projects/fastqc/], merging of paired-end reads using BBMerge [https://sourceforge.net/projects/bbmap/] (optional), adapter removal and quality trimming/filtering using BBDuk [https://sourceforge.net/projects/bbmap/], removal of host contaminant reads using BBSplit/BBMap [https://sourceforge.net/projects/bbmap/], and lastly taxonomic and functional profiling using MetaPhlAn/HUMAnN workflow [https://huttenhower.sph.harvard.edu/humann/]. A convenience script is also located in the repository that wraps GraPhlAn [https://huttenhower.sph.harvard.edu/graphlan/] for generating a cladogram of top most abundant clades detected by MetaPhlAn (`Create_Cladogram.sh`).
 
 The following gives an overview of the overall structure of the repository:
 
@@ -45,7 +45,7 @@ The `SLURM_Shotgun_Metagenomic_Pipeline/` that houses separate shell scripts for
 ##############################################################
 # Whole Genome Shotgun Metagenomic Processing Pipeline       #
 # by Zachary D Wallen                                        #
-# Last updated: 8 June 2021                                  #
+# Last updated: 8 Sep 2021                                   #
 ##############################################################
  
  Description: This is a wrapper program that wraps various  
@@ -63,9 +63,10 @@ The `SLURM_Shotgun_Metagenomic_Pipeline/` that houses separate shell scripts for
     BBMerge:    For merging paired-end reads.               
     BBDuk:      For adapter and quality trimming of raw wgs 
                 reads. Also can remove PhiX sequences.      
-    KneadData:  For removing host contamination from wgs    
-                reads. Requires Bowtie2 database file to    
-                map reads against.                          
+    BBMap/                                                  
+    BBSplit:    For removing host contamination from wgs    
+                reads. Requires FASTA genome reference file 
+                to map reads against.                       
     HUMAnN:     For generating taxonomic, gene family, and  
                 pathway abundances.                         
     ChocoPhlAn: Database used for taxonomic profiling. Can  
@@ -84,7 +85,7 @@ The `SLURM_Shotgun_Metagenomic_Pipeline/` that houses separate shell scripts for
  SLURM_Shotgun_Metagenomic_Pipeline.sh -i input_seqs_dir \  
                     -o output_dir \                         
                     -p 'commands; to; load; programs' \     
-                    -r path/to/host/ref/files/dir \         
+                    -r path/to/host/ref/file.fa \           
                     -c path/to/chocophlan/dir \             
                     -u path/to/uniref/dir \                 
                     -t path/to/clade/marker/info/file \     
@@ -106,8 +107,8 @@ The `SLURM_Shotgun_Metagenomic_Pipeline/` that houses separate shell scripts for
            needed to run pipeline steps (e.g. activating    
            conda environments, loading modules, adding to   
            PATH, etc.).                                     
-     -r    (Required) Path to directory of host genome      
-           Bowtie2 indexed reference files (.bt2 files).    
+     -r    (Required) Path to reference genome file of host.
+           Should be in FASTA format, and uncompressed.     
      -c    (Required) Path to ChocoPhlAn database directory.
      -u    (Required) Path to UniRef90 database directory.  
      -t    (Required) Path to clade marker info file        
@@ -122,7 +123,7 @@ The `SLURM_Shotgun_Metagenomic_Pipeline/` that houses separate shell scripts for
      -s    (Optional) Skip certain steps in the pipeline if 
            need be. Provide a comma separated list of steps 
            that you wish to skip in the pipeline. List may  
-           have the values: fastqc, bbduk, kneaddata, humann
+           have the values: fastqc, QC, decontam, humann
 ```
 ```
 ./Create_Cladogram.sh -h
