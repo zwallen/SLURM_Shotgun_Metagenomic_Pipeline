@@ -859,11 +859,24 @@ else
   mkdir ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/Merged_Sample_Tables
   
   for dir in ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/*_Profiles; do
-    cp ${dir}/*metaphlan_rel_abun_table.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
-    cp ${dir}/*metaphlan_norm_abun_table.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
-    cp ${dir}/*genefamilies.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
-    cp ${dir}/*pathabundance.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
-    cp ${dir}/*pathcoverage.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
+    FILE_NAME=$(echo $dir | awk -F '/' '{print $NF}' | awk -F '_Profiles' '{print $1}')
+    
+    cp ${dir}/${FILE_NAME}_metaphlan_rel_abun_table.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
+    
+    cp ${dir}/${FILE_NAME}_metaphlan_norm_abun_table.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
+    
+    sed -i 1d ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${FILE_NAME}_metaphlan_norm_abun_table.tsv
+    cat <(head -n 3 ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${FILE_NAME}_metaphlan_rel_abun_table.tsv) \
+    ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${FILE_NAME}_metaphlan_norm_abun_table.tsv > \
+    ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/temp.txt
+    mv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/temp.txt \
+    ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/${FILE_NAME}_metaphlan_norm_abun_table.tsv
+    
+    cp ${dir}/${FILE_NAME}_genefamilies.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
+    
+    cp ${dir}/${FILE_NAME}_pathabundance.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
+    
+    cp ${dir}/${FILE_NAME}_pathcoverage.tsv ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/
   done
   
   #Create individual scripts for running table merging
