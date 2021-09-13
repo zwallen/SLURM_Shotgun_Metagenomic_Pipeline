@@ -22,11 +22,8 @@ rm full_mapping_v201901b.tar.gz
 
 wget "https://zenodo.org/record/3957592/files/mpa_v30_CHOCOPhlAn_201901_marker_info.txt.bz2"
 
-wget "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set.fna.bowtie_index.tar.gz"
-tar -xvzf GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set.fna.bowtie_index.tar.gz
-mkdir GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set
-mv GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set.fna.bowtie_index.* GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set/ 
-rm GCA_000001405.15_GRCh38_full_plus_hs38d1_analysis_set.fna.bowtie_index.tar.gz
+wget "https://ftp.ncbi.nlm.nih.gov/genomes/genbank/vertebrate_mammalian/Homo_sapiens/reference/GCA_000001405.28_GRCh38.p13/GCA_000001405.28_GRCh38.p13_genomic.fna.gz"
+gunzip GCA_000001405.28_GRCh38.p13_genomic.fna.gz
 
 echo " *** Reference databases for running SLURM_Shotgun_Metagenomic_Pipeline.sh have been downloaded ***"
 
