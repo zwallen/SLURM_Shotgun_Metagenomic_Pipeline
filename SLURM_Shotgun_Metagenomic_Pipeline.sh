@@ -784,6 +784,9 @@ else
   echo "--verbose \\" >> bash_script.sh
   echo "> ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.log 2>&1" >> bash_script.sh
   echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}.temp.fastq" >> bash_script.sh
+  echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}_humann_temp/*_bowtie_*" >> bash_script.sh
+  echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}_humann_temp/*_diamond_*" >> bash_script.sh
+  echo "rm ${RESULTS_DIR}/4.Taxonomic_and_Functional_Profiling/\${FILE_NAME}_humann_temp/*_custom_chocophlan_database.ffn" >> bash_script.sh
   chmod +x bash_script.sh
   
   sbatch bash_script.sh > /dev/null
